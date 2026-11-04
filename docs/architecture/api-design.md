@@ -1,14 +1,22 @@
-# API design (proposed contract)
+# API design
 
-Base path: `/api/v1`. JSON request and response bodies use camelCase. Money values use integer paise or integer INR as explicitly named fields; never binary floating point. The health route is implemented; all other routes below are design only.
+Base path: `/api/v1`. JSON request and response bodies use camelCase. The
+health and catalogue/recommendation routes below are implemented. Money is
+serialized as decimal INR values backed by `BigDecimal`; callers cannot supply
+prices.
 
 | Method and route | Purpose | Request / response outline |
 |---|---|---|
 | `GET /health` | Liveness | `{status, service}` |
+| `GET /catalogue/products` | List imported products | Returns all loaded catalogue products |
+| `GET /catalogue/products/{productId}` | Read one product | Returns product or `404` |
+| `POST /catalogue/eligibility/evaluate` | Evaluate products for a profile | Returns each product with eligible/manual-review/ineligible status and reasons |
+| `POST /catalogue/bundles/validate` | Validate selected products | Profile plus product IDs and quantities; rejects invalid bundles |
+| `POST /catalogue/pricing/calculate` | Price an eligible bundle | Same request as validation; returns line and total estimates |
+| `POST /recommendations` | Deterministic recommendation | Business profile + needs; returns eligible products, prices and exclusions |
 | `POST /advisor/sessions` | Start needs discovery | Locale and optional channel; returns session ID and first prompt |
 | `POST /advisor/sessions/{id}/messages` | Continue guided conversation | User message; returns assistant response and structured profile fields |
-| `POST /recommendations` | Deterministic recommendation | Business profile + needs; returns candidate bundles, eligibility and reason codes |
-| `POST /quotes` | Price a selected bundle | Product IDs, explicit quantities, profile; returns line prices, setup, term, caveats and quote token |
+| `POST /quotes` | Persist a quote | Not implemented; current price calculation is stateless |
 | `POST /consents` | Record scoped consent | Purpose, notice version, affirmative action; returns receipt ID |
 | `POST /kyc/lookups/gstin` | Mock GST lookup | GSTIN + consent receipt; returns masked identity, status and synthetic-source marker |
 | `POST /kyc/lookups/udyam` | Mock Udyam lookup | Udyam number + consent receipt; returns masked enterprise details and synthetic-source marker |
@@ -29,3 +37,33 @@ Base path: `/api/v1`. JSON request and response bodies use camelCase. Money valu
 ## Recommendation/LLM boundary
 
 Recommendation response is built from deterministic catalogue-engine results. Advisor messages may reference only product IDs/prices/reasons returned by that engine. The LLM adapter receives minimized business needs and an allowlisted recommendation context; it returns candidate explanatory text, which is sanitized and checked for unsupported offers before display. Failure falls back to deterministic templates.
+
+### Implemented request shape
+
+The profile request fields are `segment`, `businessType`, `employeeCount`,
+`siteCount`, `cityTier`, `needs`, and `gstinStatus`. Segment and tier are enum
+names from the API schema. See the request records under
+`backend/src/main/java/com/udhyam/digital/catalogue/api` for the full contract.
+
+```json
+{
+  "businessProfile": {
+    "segment": "MICRO_RETAIL",
+    "businessType": "Retail shop",
+    "employeeCount": 3,
+    "siteCount": 1,
+    "cityTier": "TIER_1",
+    "needs": ["CONNECTIVITY", "DIGITAL_PRESENCE"],
+    "gstinStatus": "ACTIVE"
+  },
+  "selections": [{"productId": "P01", "quantity": 1}]
+}
+```
+
+Bundle validate and price use that shape. Recommendations accept the profile
+object directly. Requests are bean-validated; errors use a JSON envelope with
+`code`, `message`, and `details`. Bundle business-rule failures return `422`.
+Eligibility evaluation is advisory and reports manual review distinctly.
+
+The advisor, quote persistence, consent, KYC, order, and tracking routes remain
+future contracts; they are not served by the application yet.

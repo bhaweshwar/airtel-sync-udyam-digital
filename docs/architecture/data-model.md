@@ -1,6 +1,9 @@
-# Data model (proposed)
+# Data model
 
-SQLite is the initial local database. Use explicit migrations and repository interfaces. Store only fields required for the prototype; keep uploaded documents out of the relational database unless an approved retention/encryption design is implemented.
+SQLite is planned for later persistence. The implemented product catalogue is
+loaded into an immutable in-memory registry; no database or customer records
+are currently written. Keep uploaded documents out of the relational database
+unless an approved retention/encryption design is implemented.
 
 ```mermaid
 erDiagram
@@ -16,7 +19,7 @@ erDiagram
   ORDER ||--o{ ORDER_EVENT : progresses
 ```
 
-## Entity ownership and key fields
+## Planned entity ownership and key fields
 
 - **BusinessProfile:** internal ID, business type/segment, city/tier/state, employee/site counts, preferred language. Keep contact data separate and optional.
 - **AdvisorSession / AdvisorMessage:** session state and minimized conversational data. Define deletion policy; do not place KYC identifiers in prompts/messages.
@@ -31,3 +34,14 @@ erDiagram
 Catalogue module owns product/eligibility data. Quotation owns quote snapshots. KYC owns consent-linked document references and field decisions. Order owns accepted commercial state. Tracking reads order events. LLM provider owns no authoritative business state. Mock registry adapters may read local synthetic CSV-derived data but do not own customer records.
 
 Add database constraints for unique IDs, allowed states, nonnegative quantities/prices and referential integrity. Migrations must be reversible where practical. Protect SQLite files and backups; `.db`, WAL/SHM files and backups are Git-ignored.
+
+## Current catalogue runtime model
+
+`Product` maps the source CSV fields including category, unit, monthly price
+range, one-time setup amount, term, city tiers, employee/site minima, GSTIN
+requirement, OR dependency IDs, install days, and target segments.
+`BusinessProfile` supplies segment, business type, counts, city tier, needs,
+and GSTIN lookup status. `ProductSelection` carries a product ID and positive
+quantity. `EligibilityResult` contains status and structured reason codes.
+`BundlePrice` contains per-product lines and aggregate recurring/setup
+estimates. These are runtime objects only and are not persisted.

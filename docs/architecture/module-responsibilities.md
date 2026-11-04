@@ -17,4 +17,10 @@ Keep domain objects independent from HTTP and SQLite. Controllers translate requ
 
 ## Initial package map
 
-`com.udhyam.digital` with `common.health` currently implemented. Future capabilities follow `advisor`, `catalogue`, `quotation`, `kyc`, `order`, `tracking`, `config`; each should have `api`, `application`, `domain`, and `infrastructure` subdivisions only when complexity warrants them.
+`com.udhyam.digital` currently includes `common.health`, `common.api`, and
+`catalogue` with `api`, `application`, `domain`, `infrastructure`, and `config`
+packages. The catalogue infrastructure loads the CSV into an immutable
+in-memory registry at startup. The application layer evaluates eligibility,
+dependencies, pricing, and recommendations; the API layer translates JSON.
+Advisor, quotation persistence, KYC, order, and tracking modules remain future
+work.

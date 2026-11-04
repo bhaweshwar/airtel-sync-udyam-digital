@@ -52,6 +52,20 @@ cd backend
 
 Health check: `GET http://localhost:8080/api/v1/health`.
 
+The backend loads the audited product catalogue at startup. By default it reads
+`data/source/dataset/product_catalogue.csv` relative to the repository root. Set
+`CATALOGUE_PATH` to use a different CSV file. A missing or invalid catalogue
+fails startup with a row-specific load error. The local source archive and
+synthetic case data remain excluded from Git.
+
 ## Current status
 
-Foundation only: architecture documentation, placeholder frontend, Spring Boot health endpoint, and baseline test. Catalogue recommendation, OCR/KYC, LLM, checkout and order tracking are not implemented. Source data is local and ignored.
+Implemented: Spring Boot health endpoint, deterministic catalogue loading,
+eligibility evaluation, bundle dependency validation, transparent pricing,
+segment and needs based recommendations, and REST endpoints. See
+[catalogue engine](docs/architecture/catalogue-engine.md) and
+[API design](docs/architecture/api-design.md).
+
+Not implemented yet: advisor/LLM, OCR and KYC workflows, checkout, persistence,
+and order activation tracking. The frontend remains a placeholder. Source data
+is local and ignored.
