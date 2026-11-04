@@ -39,8 +39,13 @@ Frontend:
 ```powershell
 cd frontend
 npm ci
+npm test
 npm run dev
 ```
+
+Frontend unit tests use Node's built-in test runner. A Windows Edge visual smoke
+flow is available at `frontend/tests/capture-flow.mjs`; it exercises the live
+advisor-to-recommendation path and writes screenshots to `docs/screenshots/`.
 
 Backend (Windows):
 
@@ -60,12 +65,15 @@ synthetic case data remain excluded from Git.
 
 ## Current status
 
-Implemented: Spring Boot health endpoint, deterministic catalogue loading,
-eligibility evaluation, bundle dependency validation, transparent pricing,
-segment and needs based recommendations, and REST endpoints. See
-[catalogue engine](docs/architecture/catalogue-engine.md) and
-[API design](docs/architecture/api-design.md).
+Implemented: premium responsive customer landing page, progressive business
+advisor, and backend-priced recommendations with eligibility details and
+reasons. The interface calls the Spring Boot REST API; the backend owns
+catalogue eligibility, dependency validation, pricing, and recommendation
+decisions. See [catalogue engine](docs/architecture/catalogue-engine.md) and
+[API design](docs/architecture/api-design.md). Actual desktop/mobile captures
+are in [docs/screenshots](docs/screenshots/).
 
-Not implemented yet: advisor/LLM, OCR and KYC workflows, checkout, persistence,
-and order activation tracking. The frontend remains a placeholder. Source data
-is local and ignored.
+Not implemented yet: conversational LLM, OCR and KYC workflows, checkout,
+persistence, and order activation tracking. The advisor is guided and
+deterministic; it does not claim to be AI powered. Source data is local and
+ignored.
