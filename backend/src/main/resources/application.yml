@@ -6,3 +6,8 @@ server:
 app:
   catalogue:
     path: ${CATALOGUE_PATH:data/source/dataset/product_catalogue.csv}
+  advisor:
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-3.8-flash}
+      timeout: ${GEMINI_TIMEOUT:30s}

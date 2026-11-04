@@ -2,6 +2,7 @@ package com.udhyam.digital.common.api;
 
 import com.udhyam.digital.catalogue.api.EligibilityResponse;
 import com.udhyam.digital.catalogue.application.BundleValidationException;
+import com.udhyam.digital.advisor.application.AdvisorProviderException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(AdvisorProviderException.class)
+    ResponseEntity<ApiErrorResponse> advisorUnavailable(AdvisorProviderException exception) {
+        return ResponseEntity.status(exception.status()).body(new ApiErrorResponse(exception.code(), exception.getMessage(), List.of()));
+    }
+
     @ExceptionHandler(BundleValidationException.class)
     ResponseEntity<ApiErrorResponse> bundleNotPurchasable(BundleValidationException exception) {
         List<EligibilityResponse> details = exception.result().products().stream().map(EligibilityResponse::from).toList();

@@ -1,4 +1,4 @@
-import type { BusinessProfile, CatalogueProduct, RecommendationResponse } from './types';
+import type { BusinessProfile, CatalogueProduct, RecommendationResponse, AdvisorSessionResponse } from './types';
 import { copy } from './copy.ts';
 
 export class ApiError extends Error {
@@ -57,4 +57,20 @@ export function getCatalogue() {
 
 export function getRecommendations(profile: BusinessProfile) {
   return post<RecommendationResponse>('/api/v1/recommendations', profile);
+}
+
+export function startAdvisorConversation(initialNeed?: string) {
+  return post<AdvisorSessionResponse>('/api/v1/advisor/conversations', initialNeed ? { initialNeed } : {});
+}
+
+export function getAdvisorConversation(id: string) {
+  return request<AdvisorSessionResponse>(`/api/v1/advisor/conversations/${encodeURIComponent(id)}`);
+}
+
+export function sendAdvisorMessage(id: string, message: string) {
+  return post<AdvisorSessionResponse>(`/api/v1/advisor/conversations/${encodeURIComponent(id)}/messages`, { message });
+}
+
+export function getAdvisorRecommendation(id: string) {
+  return request<RecommendationResponse>(`/api/v1/advisor/conversations/${encodeURIComponent(id)}/recommendation`);
 }

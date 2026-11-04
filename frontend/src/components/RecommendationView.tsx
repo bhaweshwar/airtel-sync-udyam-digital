@@ -10,11 +10,13 @@ interface RecommendationViewProps {
   loadingCatalogue: boolean;
   onEdit: () => void;
   onRestart: () => void;
+  advisorExplanation?: string;
+  productExplanations?: Record<string, string>;
 }
 
 const money = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
 
-export function RecommendationView({ profile, result, catalogue, loadingCatalogue, onEdit, onRestart }: RecommendationViewProps) {
+export function RecommendationView({ profile, result, catalogue, loadingCatalogue, onEdit, onRestart, advisorExplanation, productExplanations = {} }: RecommendationViewProps) {
   const [expanded, setExpanded] = useState(true);
   const [showExcluded, setShowExcluded] = useState(false);
   const option = result.recommendations[0];
@@ -30,6 +32,7 @@ export function RecommendationView({ profile, result, catalogue, loadingCatalogu
         <p className="overline">YOUR RECOMMENDATION</p>
         <h1 id="results-title">A clearer way<br />to <span>move forward.</span></h1>
         <p className="results-intro">{result.summary}</p>
+        {advisorExplanation && <div className="advisor-explanation"><span className="aside-icon"><Icon name="spark" size={16} /></span><p>{advisorExplanation}</p></div>}
 
         {option ? <article className="recommendation-card">
           <div className="recommendation-top"><div><span className="recommended-label"><Icon name="spark" size={14} /> A considered starting point</span><h2>{option.bundleName}</h2><p>Based on your business and the priorities you shared.</p></div><span className={`eligibility-pill ${option.eligibility.status.toLowerCase().replace('_', '-')}`}>{option.eligibility.status === 'ELIGIBLE' ? 'Ready to explore' : option.eligibility.status.replace('_', ' ')}</span></div>
@@ -39,7 +42,7 @@ export function RecommendationView({ profile, result, catalogue, loadingCatalogu
           {expanded && <div className="product-list">{option.pricing.lines.map((line, index) => {
             const product = productFor(line.productId);
             const status = setFor(option.eligibility.products, line.productId);
-            return <article className="product-row" key={line.productId}><span className="product-icon"><Icon name={(product?.category.toLowerCase().includes('connect') ? 'wifi' : product?.category.toLowerCase().includes('cloud') ? 'cloud' : 'spark') as IconName} size={19} /></span><div className="product-copy"><div className="product-title"><h3>{line.productName}</h3><span className={`product-status ${status.toLowerCase().replace('_', '-')}`}>{status === 'ELIGIBLE' ? 'Eligible' : status.replace('_', ' ')}</span></div><p>{product?.description ?? (loadingCatalogue ? 'Loading product details…' : `${line.unit} · quantity ${line.quantity}`)}</p><span className="product-why"><Icon name="check" size={14} />{option.explanations[index] ?? 'Included in your recommended bundle.'}</span></div><div className="product-price"><b>{money(line.extendedDefaultMonthly)}</b><small>/ month</small><span>{line.unit} · qty {line.quantity}</span></div></article>;
+            return <article className="product-row" key={line.productId}><span className="product-icon"><Icon name={(product?.category.toLowerCase().includes('connect') ? 'wifi' : product?.category.toLowerCase().includes('cloud') ? 'cloud' : 'spark') as IconName} size={19} /></span><div className="product-copy"><div className="product-title"><h3>{line.productName}</h3><span className={`product-status ${status.toLowerCase().replace('_', '-')}`}>{status === 'ELIGIBLE' ? 'Eligible' : status.replace('_', ' ')}</span></div><p>{product?.description ?? (loadingCatalogue ? 'Loading product details…' : `${line.unit} · quantity ${line.quantity}`)}</p><span className="product-why"><Icon name="check" size={14} />{productExplanations[line.productId] ?? option.explanations[index] ?? 'Included in your recommended bundle.'}</span></div><div className="product-price"><b>{money(line.extendedDefaultMonthly)}</b><small>/ month</small><span>{line.unit} · qty {line.quantity}</span></div></article>;
           })}</div>}
           <div className="pricing-disclosure"><Icon name="lock" size={15} /><span>Estimate based on catalogue pricing. Setup is charged once per selected product. Final availability and pricing may vary.</span></div>
         </article> : <div className="empty-recommendation"><span className="empty-icon"><Icon name="spark" size={23} /></span><h2>We need to take another look.</h2><p>{result.summary}</p><p>Some products may need additional eligibility checks. Adjust your answers to explore another combination.</p><button className="button button-primary" onClick={onEdit} type="button">Review my answers <Icon name="arrow" /></button></div>}

@@ -71,3 +71,30 @@ export interface RecommendationResponse {
   recommendations: BundleRecommendation[];
   excludedProducts: EligibilityItem[];
 }
+
+export interface AdvisorProfile {
+  segment: Segment | null;
+  businessType: string | null;
+  employeeCount: number | null;
+  siteCount: number | null;
+  city: string | null;
+  cityTier: number | null;
+  state: string | null;
+  gstinStatus: GstinStatus | null;
+  currentRequirements: Need[];
+  industryActivity: string | null;
+}
+
+export interface AdvisorMessage { role: 'user' | 'assistant'; content: string; createdAt: string }
+export interface AdvisorSessionResponse {
+  conversationId: string;
+  messages: AdvisorMessage[];
+  profile: AdvisorProfile;
+  missingFields: string[];
+  followUpQuestions: string[];
+  status: 'DISCOVERY' | 'RECOMMENDATION_READY';
+  recommendation: RecommendationResponse | null;
+  advisorExplanation: string | null;
+  productExplanations: Record<string, string>;
+  gstinStatusVerified: false;
+}

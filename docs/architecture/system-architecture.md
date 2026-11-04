@@ -17,20 +17,21 @@ flowchart LR
   KYC --> OCR[Tesseract adapter]
   KYC --> GST[Mock GST registry adapter]
   KYC --> Udyam[Mock Udyam registry adapter]
-  Advisor -. sanitized conversational context .-> LLM[LLM provider abstraction]
+  Advisor -. redacted conversation / candidate extraction .-> Provider[AdvisorModelProvider]
+  Provider --> Gemini[Gemini REST adapter]
   Catalog --> DB[(SQLite via repositories)]
   Quote --> DB
   KYC --> DB
   Orders --> DB
 ```
 
-The diagram describes intended architecture, not implemented integrations. The only backend endpoint implemented at foundation stage is health. Mock registries are local synthetic data; any production registry, DigiLocker, e-sign, payment or messaging integration requires separate authorization and compliance review.
+The catalogue engine and advisor/Gemini provider path are implemented. SQLite, KYC, quote, order and tracking components remain planned. Conversation state is held in process memory for up to two hours. No government lookup is performed by the advisor.
 
 ## Communication and trust boundaries
 
 - Browser to backend: JSON REST under `/api/v1`; production deployment must use HTTPS, authentication, authorization, CSRF/CORS policy appropriate to the hosting topology, request limits and rate limits.
 - Backend to persistence: domain services call repository interfaces; only persistence adapters know SQLite details.
-- Backend to OCR/registry/model providers: adapters isolate network/process details, timeouts and error mapping. No provider secrets are sent to the frontend.
+- Backend to OCR/registry/model providers: adapters isolate network/process details, timeouts and error mapping. The Gemini key stays in the backend environment and is sent only in an HTTPS API header.
 - KYC documents and identifiers are sensitive inputs. Keep files outside public web roots, apply consent before processing, minimize retention, and mask values in logs/responses.
 
 ## Business-rule authority
@@ -39,7 +40,7 @@ Catalogue eligibility, dependency resolution, price arithmetic, KYC state transi
 
 ## Main data flows
 
-1. Advisor captures business profile and needs; backend evaluates catalogue rules and returns eligible options plus reason codes.
+1. Advisor redacts common sensitive identifiers, retains a short-lived session, and uses Gemini for evidence-checked profile extraction and explanation; the deterministic engine returns eligible options, prices and reason codes.
 2. Quote endpoint calculates totals from catalogue data and confirmed quantities; checkout revalidates before creating an order.
 3. Consent precedes document upload and each mock registry lookup. OCR candidates are user-correctable and flow through validators; uncertain fields route to manual review.
 4. Order events are persisted and exposed through a minimal owner-facing tracker.
