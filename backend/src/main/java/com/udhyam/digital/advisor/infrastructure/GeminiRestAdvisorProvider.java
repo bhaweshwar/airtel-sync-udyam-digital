@@ -9,10 +9,14 @@ import com.udhyam.digital.advisor.application.AdvisorProviderException;
 import com.udhyam.digital.advisor.domain.AdvisorMessage;
 import com.udhyam.digital.advisor.domain.AdvisorProfile;
 import com.udhyam.digital.catalogue.api.RecommendationResponse;
+import java.net.SocketTimeoutException;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +29,7 @@ import org.springframework.web.client.RestClientResponseException;
 /** Google Gemini documented REST adapter. Secrets are sent only in the HTTPS API-key header. */
 @Component
 public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
+    private static final Logger log = LoggerFactory.getLogger(GeminiRestAdvisorProvider.class);
     private static final Pattern MODEL_NAME = Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}");
     private static final Pattern UNSUPPORTED_COMMERCIAL_TEXT = Pattern.compile("(?i)(\\x{20B9}|\\bINR\\b|\\bRs\\.?\\b|\\bprice\\b|\\bcost\\b|\\bdiscount\\b|\\bP\\d{2}\\b|\\d)");
     private static final String API_ROOT = "https://generativelanguage.googleapis.com";
@@ -84,7 +89,11 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
             if (unsafeLanguage(reply)) throw malformed();
             return new ExtractionResponse(reply, facts, followups);
         } catch (AdvisorProviderException exception) { throw exception; }
-        catch (Exception exception) { throw malformed(); }
+        catch (Exception exception) {
+            log.warn("Gemini response parsing failed: exceptionType={} diagnostic=Generated response could not be parsed",
+                    exception.getClass().getSimpleName());
+            throw malformed();
+        }
     }
 
     @Override
@@ -110,7 +119,11 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
             }
             return new ExplanationResponse(summary, explanations);
         } catch (AdvisorProviderException exception) { throw exception; }
-        catch (Exception exception) { throw malformed(); }
+        catch (Exception exception) {
+            log.warn("Gemini response parsing failed: exceptionType={} diagnostic=Generated response could not be parsed",
+                    exception.getClass().getSimpleName());
+            throw malformed();
+        }
     }
 
     private JsonNode generate(String system, String input, ObjectNode schema, int maxTokens) {
@@ -138,9 +151,15 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
             return text;
         } catch (AdvisorProviderException exception) { throw exception; }
         catch (ResourceAccessException exception) {
+            Throwable cause = rootCause(exception);
+            String category = isTimeout(exception) ? "timeout" : "connection_failure";
+            log.warn("Gemini transport failure: category={} exceptionType={} diagnostic=Gemini transport request failed; details omitted",
+                    category, cause.getClass().getSimpleName());
             throw new AdvisorProviderException("ADVISOR_TIMEOUT", HttpStatus.GATEWAY_TIMEOUT,
                     "The business advisor took too long to respond. Please try again.");
         } catch (RestClientResponseException exception) {
+            log.warn("Gemini upstream HTTP failure: upstreamStatus={} exceptionType={} diagnostic=Gemini returned an HTTP error; response details omitted",
+                    exception.getStatusCode().value(), exception.getClass().getSimpleName());
             if (exception.getStatusCode().value() == 429) throw new AdvisorProviderException("ADVISOR_RATE_LIMITED",
                     HttpStatus.SERVICE_UNAVAILABLE, "The business advisor is busy right now. Please try again shortly.");
             if (exception.getStatusCode().is4xxClientError()) throw new AdvisorProviderException("ADVISOR_PROVIDER_CONFIGURATION",
@@ -148,6 +167,8 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
             throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
                     "The business advisor is temporarily unavailable. Please try again.");
         } catch (RuntimeException exception) {
+            log.warn("Gemini runtime failure: exceptionType={} diagnostic=Gemini request failed; exception details omitted",
+                    exception.getClass().getSimpleName());
             throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
                     "The business advisor is temporarily unavailable. Please try again.");
         }
@@ -195,7 +216,21 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
     }
     private static boolean unsafeLanguage(String value) { return UNSUPPORTED_COMMERCIAL_TEXT.matcher(value).find(); }
     private static AdvisorProviderException malformed() {
+        log.warn("Gemini response parsing failed: exceptionType=InvalidResponse diagnostic=Response did not match the expected structure");
         return new AdvisorProviderException("ADVISOR_INVALID_RESPONSE", HttpStatus.BAD_GATEWAY,
                 "The business advisor returned an incomplete response. Please try again.");
+    }
+
+    private static boolean isTimeout(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SocketTimeoutException || cause instanceof HttpTimeoutException) return true;
+        }
+        return false;
+    }
+
+    private static Throwable rootCause(Throwable exception) {
+        Throwable cause = exception;
+        while (cause.getCause() != null && cause.getCause() != cause) cause = cause.getCause();
+        return cause;
     }
 }

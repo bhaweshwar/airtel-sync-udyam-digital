@@ -3,6 +3,9 @@ spring:
     name: udyam-digital-api
 server:
   port: 8080
+logging:
+  level:
+    org.springframework.web: INFO
 app:
   catalogue:
     path: ${CATALOGUE_PATH:data/source/dataset/product_catalogue.csv}
