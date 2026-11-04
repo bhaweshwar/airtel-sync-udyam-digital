@@ -1,0 +1,44 @@
+# Java / Maven
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend dependencies and builds
+**/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Local data and databases
+data/source/
+airtel_sync_source.zip
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+secrets/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs, temporary and generated OCR artifacts
+*.log
+logs/
+tmp/
+temp/
+**/ocr-output/
+**/ocr-temp/
+coverage/

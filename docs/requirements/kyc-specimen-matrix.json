@@ -1,0 +1,1468 @@
+[
+  {
+    "applicant": "K01",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction not reliable enough for exact lookup."
+        },
+        "format": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "No reliable exact candidate."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Neha Kaur"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2028-03-26"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 19,
+          "evidence": "19 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Vindhya Tours & Travels",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K02",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Joseph Shah"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2028-09-10"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 54,
+          "evidence": "54 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Harmony Dental Care",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K03",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "PASS",
+          "value": "masked in report",
+          "evidence": "OCR produced a candidate; exact extraction/registry match only confirmed for indicated Active cases."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "status": "Active",
+          "evidence": "Exact OCR-derived identifier matched a mock Active record."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Joseph Singh"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2028-07-04"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 46,
+          "evidence": "46 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Ganesh Woodcraft",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K04",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction not reliable enough for exact lookup."
+        },
+        "format": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "No reliable exact candidate."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Fatima Pillai"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2028-08-03"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 48,
+          "evidence": "48 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Saffron Dental Care LLP",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K05",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "PASS",
+          "value": "masked in report",
+          "evidence": "OCR produced a candidate; exact extraction/registry match only confirmed for indicated Active cases."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "status": "Active",
+          "evidence": "Exact OCR-derived identifier matched a mock Active record."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "MISSING",
+          "evidence": "No Udyam image exists for this applicant."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "MISSING",
+          "evidence": "No image supplied."
+        },
+        "format": {
+          "outcome": "MISSING",
+          "evidence": "Certificate missing."
+        },
+        "registry_lookup": {
+          "outcome": "MISSING",
+          "evidence": "No certificate to inspect."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MISSING",
+          "evidence": "Certificate missing."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Anita Shah"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2029-09-11"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 34,
+          "evidence": "34 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Balaji Realty LLP",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K06",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Pooja Shah"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2028-09-15"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 34,
+          "evidence": "34 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Saffron Unisex Salon",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K07",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR reads a proprietor name with trade name ?Shri Physio Clinic?, while Udyam/address material identifies ?Neelgiri Physio Clinic?; determine whether this is a mismatch or OCR/business alias before proceeding."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Neha Banerjee"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2030-05-05"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 10,
+          "evidence": "10 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Neelgiri Physio Clinic",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": [
+      "Potential business/trade-name inconsistency between GST and Udyam/address documents; manual review."
+    ]
+  },
+  {
+    "applicant": "K08",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Joseph Rao"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2027-09-18"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 50,
+          "evidence": "50 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Green Leaf Legal Associates",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K09",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Anita Kulkarni"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2027-12-22"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 5,
+          "evidence": "5 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Kaveri Insurance Advisors",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K10",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Nisha Arora"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2029-06-01"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 27,
+          "evidence": "27 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Kaveri Stays LLP",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K11",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "MANUAL_REVIEW",
+          "value": "masked in report",
+          "evidence": "OCR candidate was unreadable/ambiguous or did not exactly match a unique record."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "MANUAL_REVIEW",
+          "status": "unknown",
+          "evidence": "No reliable exact candidate; do not infer no-record from uncertain OCR."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Vikram Pillai"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2028-12-23"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "FAIL",
+          "age_days": 257,
+          "evidence": "257 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Trinity Bake House Pvt Ltd",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  },
+  {
+    "applicant": "K12",
+    "fields": {
+      "gst_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "gstin_extraction": {
+          "outcome": "PASS",
+          "value": "masked in report",
+          "evidence": "OCR produced a candidate; exact extraction/registry match only confirmed for indicated Active cases."
+        },
+        "format_checksum": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Must validate corrected full OCR value using GSTIN pattern/checksum; README requires accepting embedded PAN character X. No checksum result is claimed for uncertain OCR."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "status": "Active",
+          "evidence": "Exact OCR-derived identifier matched a mock Active record."
+        },
+        "legal_name": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR legal/trade name needs comparison with registry and entity/proprietor relationship; extraction alone is not validation."
+        },
+        "address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare OCR principal place of business with registry/declared address after correcting OCR; not confidently adjudicated."
+        }
+      },
+      "udyam_certificate": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "number_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR candidate exactly matched synthetic Udyam registry; district code 00 accepted per README."
+        },
+        "format": {
+          "outcome": "PASS",
+          "evidence": "Synthetic UDYAM-<state>-00-<number> candidate; full pattern check follows OCR correction."
+        },
+        "registry_lookup": {
+          "outcome": "PASS",
+          "evidence": "Exact OCR-derived candidate matched mock registry; this is synthetic lookup only."
+        },
+        "enterprise_type_activity_name_address": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare extracted enterprise type/activity/name/address to registry and other documents; OCR/manual correction required."
+        }
+      },
+      "signatory_id": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Source image is synthetic/specimen-only and marked not valid for real KYC."
+        },
+        "name_extraction": {
+          "outcome": "PASS",
+          "evidence": "Tesseract read a name on the available specimen ID; full applicant matching is not established.",
+          "value": "Pooja Agarwal"
+        },
+        "expiry": {
+          "outcome": "PASS",
+          "evidence": "OCR-visible expiry dates are future of 2026-07-15 for supplied IDs; image/document remains a synthetic invalid specimen.",
+          "value": "2029-03-03"
+        },
+        "authority_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Role and authority must be reconciled against business registration/authorization; no independent authority evidence."
+        },
+        "image_quality": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "OCR extraction is not calibrated; inspect image and user-correct fields before a real decision."
+        }
+      },
+      "address_proof": {
+        "presence": {
+          "outcome": "PASS",
+          "evidence": "File exists in supplied specimen set."
+        },
+        "authenticity": {
+          "outcome": "FAIL",
+          "evidence": "Synthetic specimen/test image, not valid customer evidence."
+        },
+        "date_extraction": {
+          "outcome": "PASS",
+          "evidence": "OCR date candidate supports age calculation at 2026-07-15; verify visually if required."
+        },
+        "age_90_day_rule": {
+          "outcome": "PASS",
+          "age_days": 9,
+          "evidence": "9 days old at 2026-07-15; threshold is no more than 90 days."
+        },
+        "address_consistency": {
+          "outcome": "MANUAL_REVIEW",
+          "evidence": "Compare bill-to/supply address with registry and declared address after resolving wrapped/ambiguous OCR; not confidently adjudicated."
+        }
+      }
+    },
+    "overall_real_kyc": "FAIL",
+    "overall_evidence": "Specimen-only documents cannot establish real KYC; an absent mandatory Udyam file or stale address proof is an additional confirmed fixture failure.",
+    "business_name_evidence": {
+      "outcome": "PASS",
+      "ocr_candidate": "Star Electronics",
+      "evidence": "OCR-read from registry/business-labelled document; name relation remains review where legal proprietor name differs from trade name."
+    },
+    "issues": []
+  }
+]

@@ -1,0 +1,182 @@
+[
+  {
+    "applicant": "K01",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K02",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K03",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K04",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K05",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "FAIL",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K06",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K07",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K08",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K09",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K10",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K11",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "FAIL"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  },
+  {
+    "applicant": "K12",
+    "expected_confirmed_outcomes": {
+      "document_authenticity": "FAIL",
+      "missing_udyam": "NOT_APPLICABLE",
+      "address_proof_age": "PASS"
+    },
+    "expected_uncertain_fields": "MANUAL_REVIEW where indicated in kyc-specimen-matrix.json",
+    "rules": [
+      "Do not pass synthetic specimens as valid KYC",
+      "No exact lookup conclusion from uncertain OCR",
+      "Accept GSTIN embedded PAN X and synthetic Udyam district 00",
+      "Address proof must be <=90 days as of 2026-07-15"
+    ]
+  }
+]
