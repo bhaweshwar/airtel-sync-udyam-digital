@@ -26,11 +26,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.ResourceAccessException;
 
 @ExtendWith(OutputCaptureExtension.class)
 class GeminiRestAdvisorProviderTest {
     private final ObjectMapper mapper = new ObjectMapper();
+    private static final String SUCCESS_RESPONSE = """
+            {"candidates":[{"content":{"parts":[{"text":"{\\"facts\\":[],\\"reply\\":\\"Thanks for sharing.\\",\\"followUpFields\\":[\\"BUSINESS_TYPE\\"]}"}]}}]}
+            """;
 
     @Test
     void missingGeminiKeyFailsRecoverablyWithoutSendingARequest() {
@@ -98,6 +102,57 @@ class GeminiRestAdvisorProviderTest {
     }
 
     @Test
+    void retries503AndSucceedsOnTheNextAttempt(CapturedOutput output) {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        String uri = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+        server.expect(requestTo(uri)).andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE).body("private upstream detail"));
+        server.expect(requestTo(uri)).andRespond(withSuccess(SUCCESS_RESPONSE, MediaType.APPLICATION_JSON));
+        var provider = new GeminiRestAdvisorProvider("private-test-key", "gemini-3.8-flash", Duration.ofSeconds(2), mapper, builder.build());
+
+        var response = provider.extract(AdvisorProfile.empty(), List.of(), "hello");
+
+        assertThat(response.reply()).isEqualTo("Thanks for sharing.");
+        assertThat(output).contains("category=upstream_503", "retry=1/2", "backoffMs=200")
+                .doesNotContain("private upstream detail", "private-test-key");
+        server.verify();
+    }
+
+    @Test
+    void stopsAfterTwoAdditional503Attempts(CapturedOutput output) {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        String uri = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+        for (int i = 0; i < 3; i++) {
+            server.expect(requestTo(uri)).andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE).body("private upstream detail"));
+        }
+        var provider = new GeminiRestAdvisorProvider("private-test-key", "gemini-3.8-flash", Duration.ofSeconds(2), mapper, builder.build());
+
+        assertThatThrownBy(() -> provider.extract(AdvisorProfile.empty(), List.of(), "hello"))
+                .isInstanceOf(AdvisorProviderException.class)
+                .hasMessage("The business advisor is temporarily unavailable. Please try again.");
+        assertThat(output).contains("retry=1/2", "retry=2/2", "upstreamStatus=503")
+                .doesNotContain("private upstream detail", "private-test-key", "retry=3/");
+        server.verify();
+    }
+
+    @Test
+    void doesNotRetryPermanentClientErrors(CapturedOutput output) {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"))
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST).body("private invalid request detail"));
+        var provider = new GeminiRestAdvisorProvider("private-test-key", "gemini-3.8-flash", Duration.ofSeconds(2), mapper, builder.build());
+
+        assertThatThrownBy(() -> provider.extract(AdvisorProfile.empty(), List.of(), "hello"))
+                .isInstanceOf(AdvisorProviderException.class)
+                .hasMessage("The business advisor could not use the configured Gemini model. Check the backend configuration and try again.");
+        assertThat(output).contains("upstreamStatus=400")
+                .doesNotContain("Gemini transient failure", "private invalid request detail", "private-test-key");
+        server.verify();
+    }
+
+    @Test
     void runtimeFailureLogsExceptionTypeButNotMessageOrKey(CapturedOutput output) {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -110,6 +165,22 @@ class GeminiRestAdvisorProviderTest {
                 .hasMessage("The business advisor is temporarily unavailable. Please try again.");
         assertThat(output).contains("Gemini runtime failure", "exceptionType=IllegalStateException")
                 .doesNotContain("private runtime detail", "private-test-key");
+        server.verify();
+    }
+
+    @Test
+    void doesNotRetryRestClientExceptionWithUnclassifiedCause(CapturedOutput output) {
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"))
+                .andRespond(request -> { throw new RestClientException("private client detail", new IllegalArgumentException("private parse detail")); });
+        var provider = new GeminiRestAdvisorProvider("private-test-key", "gemini-3.8-flash", Duration.ofSeconds(2), mapper, builder.build());
+
+        assertThatThrownBy(() -> provider.extract(AdvisorProfile.empty(), List.of(), "hello"))
+                .isInstanceOf(AdvisorProviderException.class)
+                .hasMessage("The business advisor is temporarily unavailable. Please try again.");
+        assertThat(output).contains("Gemini REST client failure", "category=non_transient", "underlyingExceptionType=IllegalArgumentException")
+                .doesNotContain("Gemini transient failure", "private client detail", "private parse detail", "private-test-key");
         server.verify();
     }
 
@@ -128,32 +199,32 @@ class GeminiRestAdvisorProviderTest {
     }
 
     @Test
-    void timeoutMapsToGatewayTimeoutWithoutExposingTransportDetails(CapturedOutput output) {
+    void retriesTimeoutAndSucceedsWithoutExposingTransportDetails(CapturedOutput output) {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"))
+        String uri = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+        server.expect(requestTo(uri))
                 .andRespond(request -> { throw new ResourceAccessException("private transport detail", new SocketTimeoutException("private timeout detail")); });
+        server.expect(requestTo(uri)).andRespond(withSuccess(SUCCESS_RESPONSE, MediaType.APPLICATION_JSON));
         var provider = new GeminiRestAdvisorProvider("test-key-only", "gemini-3.8-flash", Duration.ofSeconds(2), mapper, builder.build());
-        assertThatThrownBy(() -> provider.extract(AdvisorProfile.empty(), List.of(), "hello"))
-                .isInstanceOf(AdvisorProviderException.class).hasMessageContaining("too long")
-                .hasMessageNotContaining("private transport detail");
-        assertThat(output).contains("Gemini transport failure", "category=timeout", "exceptionType=SocketTimeoutException")
-                .doesNotContain("private transport detail", "test-key-only");
+        assertThat(provider.extract(AdvisorProfile.empty(), List.of(), "hello").reply()).isEqualTo("Thanks for sharing.");
+        assertThat(output).contains("Gemini transient failure", "category=timeout", "retry=1/2", "causeType=SocketTimeoutException")
+                .doesNotContain("private transport detail", "private timeout detail", "test-key-only");
         server.verify();
     }
 
     @Test
-    void connectionFailureIsCategorizedWithoutLoggingTransportMessageOrKey(CapturedOutput output) {
+    void restClientExceptionWithConnectionCauseIsRetriedAndCauseTypeIsLoggedSafely(CapturedOutput output) {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://generativelanguage.googleapis.com");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"))
-                .andRespond(request -> { throw new ResourceAccessException("private connection detail", new ConnectException("private socket detail")); });
+        String uri = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
+        server.expect(requestTo(uri))
+                .andRespond(request -> { throw new RestClientException("private connection detail", new ConnectException("private socket detail")); });
+        server.expect(requestTo(uri)).andRespond(withSuccess(SUCCESS_RESPONSE, MediaType.APPLICATION_JSON));
         var provider = new GeminiRestAdvisorProvider("private-test-key", "gemini-3.8-flash", Duration.ofSeconds(2), mapper, builder.build());
 
-        assertThatThrownBy(() -> provider.extract(AdvisorProfile.empty(), List.of(), "hello"))
-                .isInstanceOf(AdvisorProviderException.class)
-                .hasMessage("The business advisor took too long to respond. Please try again.");
-        assertThat(output).contains("Gemini transport failure", "category=connection_failure", "exceptionType=ConnectException")
+        assertThat(provider.extract(AdvisorProfile.empty(), List.of(), "hello").reply()).isEqualTo("Thanks for sharing.");
+        assertThat(output).contains("Gemini transient failure", "category=connection_failure", "causeType=ConnectException")
                 .doesNotContain("private connection detail", "private socket detail", "private-test-key");
         server.verify();
     }

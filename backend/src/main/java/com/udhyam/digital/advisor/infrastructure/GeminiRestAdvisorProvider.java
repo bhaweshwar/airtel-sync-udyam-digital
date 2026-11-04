@@ -9,11 +9,15 @@ import com.udhyam.digital.advisor.application.AdvisorProviderException;
 import com.udhyam.digital.advisor.domain.AdvisorMessage;
 import com.udhyam.digital.advisor.domain.AdvisorProfile;
 import com.udhyam.digital.catalogue.api.RecommendationResponse;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +28,15 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 /** Google Gemini documented REST adapter. Secrets are sent only in the HTTPS API-key header. */
 @Component
 public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
     private static final Logger log = LoggerFactory.getLogger(GeminiRestAdvisorProvider.class);
+    private static final int MAX_RETRIES = 2;
+    private static final long INITIAL_BACKOFF_MILLIS = 200;
     private static final Pattern MODEL_NAME = Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}");
     private static final Pattern UNSUPPORTED_COMMERCIAL_TEXT = Pattern.compile("(?i)(\\x{20B9}|\\bINR\\b|\\bRs\\.?\\b|\\bprice\\b|\\bcost\\b|\\bdiscount\\b|\\bP\\d{2}\\b|\\d)");
     private static final String API_ROOT = "https://generativelanguage.googleapis.com";
@@ -140,38 +147,77 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
         generation.set("responseSchema", schema);
         generation.put("temperature", 0.2);
         generation.put("maxOutputTokens", maxTokens);
-        try {
-            JsonNode response = client.post()
-                    .uri("/v1beta/models/{model}:generateContent", model)
-                    .header("x-goog-api-key", apiKey)
-                    .body(body)
-                    .retrieve().body(JsonNode.class);
-            JsonNode text = response == null ? null : response.at("/candidates/0/content/parts/0/text");
-            if (text == null || !text.isTextual() || text.asText().isBlank()) throw malformed();
-            return text;
-        } catch (AdvisorProviderException exception) { throw exception; }
-        catch (ResourceAccessException exception) {
-            Throwable cause = rootCause(exception);
-            String category = isTimeout(exception) ? "timeout" : "connection_failure";
-            log.warn("Gemini transport failure: category={} exceptionType={} diagnostic=Gemini transport request failed; details omitted",
-                    category, cause.getClass().getSimpleName());
-            throw new AdvisorProviderException("ADVISOR_TIMEOUT", HttpStatus.GATEWAY_TIMEOUT,
-                    "The business advisor took too long to respond. Please try again.");
-        } catch (RestClientResponseException exception) {
-            log.warn("Gemini upstream HTTP failure: upstreamStatus={} exceptionType={} diagnostic=Gemini returned an HTTP error; response details omitted",
-                    exception.getStatusCode().value(), exception.getClass().getSimpleName());
-            if (exception.getStatusCode().value() == 429) throw new AdvisorProviderException("ADVISOR_RATE_LIMITED",
-                    HttpStatus.SERVICE_UNAVAILABLE, "The business advisor is busy right now. Please try again shortly.");
-            if (exception.getStatusCode().is4xxClientError()) throw new AdvisorProviderException("ADVISOR_PROVIDER_CONFIGURATION",
-                    HttpStatus.SERVICE_UNAVAILABLE, "The business advisor could not use the configured Gemini model. Check the backend configuration and try again.");
-            throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
-                    "The business advisor is temporarily unavailable. Please try again.");
-        } catch (RuntimeException exception) {
-            log.warn("Gemini runtime failure: exceptionType={} diagnostic=Gemini request failed; exception details omitted",
-                    exception.getClass().getSimpleName());
-            throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
-                    "The business advisor is temporarily unavailable. Please try again.");
+        for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                JsonNode response = client.post()
+                        .uri("/v1beta/models/{model}:generateContent", model)
+                        .header("x-goog-api-key", apiKey)
+                        .body(body)
+                        .retrieve().body(JsonNode.class);
+                JsonNode text = response == null ? null : response.at("/candidates/0/content/parts/0/text");
+                if (text == null || !text.isTextual() || text.asText().isBlank()) throw malformed();
+                return text;
+            } catch (AdvisorProviderException exception) { throw exception; }
+            catch (RestClientResponseException exception) {
+                int upstreamStatus = exception.getStatusCode().value();
+                if (upstreamStatus == 503 && retry(attempt, "upstream_503", exception.getClass().getSimpleName())) continue;
+                log.warn("Gemini upstream HTTP failure: upstreamStatus={} exceptionType={} diagnostic=Gemini returned an HTTP error; response details omitted",
+                        upstreamStatus, exception.getClass().getSimpleName());
+                if (upstreamStatus == 429) throw new AdvisorProviderException("ADVISOR_RATE_LIMITED",
+                        HttpStatus.SERVICE_UNAVAILABLE, "The business advisor is busy right now. Please try again shortly.");
+                if (exception.getStatusCode().is4xxClientError()) throw new AdvisorProviderException("ADVISOR_PROVIDER_CONFIGURATION",
+                        HttpStatus.SERVICE_UNAVAILABLE, "The business advisor could not use the configured Gemini model. Check the backend configuration and try again.");
+                throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
+                        "The business advisor is temporarily unavailable. Please try again.");
+            } catch (ResourceAccessException exception) {
+                String category = transientFailureCategory(exception);
+                Throwable cause = rootCause(exception);
+                if (category != null && retry(attempt, category, cause.getClass().getSimpleName())) continue;
+                log.warn("Gemini transport failure: category={} exceptionType={} diagnostic=Gemini transport request failed; details omitted",
+                        category == null ? "non_transient" : category, cause.getClass().getSimpleName());
+                throw new AdvisorProviderException("ADVISOR_TIMEOUT", HttpStatus.GATEWAY_TIMEOUT,
+                        "The business advisor took too long to respond. Please try again.");
+            } catch (RestClientException exception) {
+                Throwable cause = rootCause(exception);
+                String category = transientFailureCategory(exception);
+                if (category != null && retry(attempt, category, cause.getClass().getSimpleName())) continue;
+                log.warn("Gemini REST client failure: category={} exceptionType={} underlyingExceptionType={} diagnostic=REST client failure; exception details omitted",
+                        category == null ? "non_transient" : category, exception.getClass().getSimpleName(), cause.getClass().getSimpleName());
+                throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
+                        "The business advisor is temporarily unavailable. Please try again.");
+            } catch (RuntimeException exception) {
+                Throwable cause = rootCause(exception);
+                log.warn("Gemini runtime failure: exceptionType={} underlyingExceptionType={} diagnostic=Gemini request failed; exception details omitted",
+                        exception.getClass().getSimpleName(), cause.getClass().getSimpleName());
+                throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
+                        "The business advisor is temporarily unavailable. Please try again.");
+            }
         }
+        throw new AdvisorProviderException("ADVISOR_PROVIDER_UNAVAILABLE", HttpStatus.BAD_GATEWAY,
+                "The business advisor is temporarily unavailable. Please try again.");
+    }
+
+    private static boolean retry(int attempt, String category, String causeType) {
+        if (attempt >= MAX_RETRIES) return false;
+        long delayMillis = INITIAL_BACKOFF_MILLIS << attempt;
+        log.warn("Gemini transient failure: category={} retry={}/{} causeType={} backoffMs={} diagnostic=Retrying transient provider failure",
+                category, attempt + 1, MAX_RETRIES, causeType, delayMillis);
+        try {
+            Thread.sleep(delayMillis);
+            return true;
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            log.warn("Gemini retry interrupted: category={} diagnostic=Retry stopped because the thread was interrupted", category);
+            return false;
+        }
+    }
+
+    private static String transientFailureCategory(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SocketTimeoutException || cause instanceof HttpTimeoutException || cause instanceof TimeoutException) return "timeout";
+            if (cause instanceof SocketException || cause instanceof UnknownHostException || cause instanceof NoRouteToHostException) return "connection_failure";
+        }
+        return null;
     }
 
     private ObjectNode extractionSchema() {
@@ -219,13 +265,6 @@ public class GeminiRestAdvisorProvider implements AdvisorModelProvider {
         log.warn("Gemini response parsing failed: exceptionType=InvalidResponse diagnostic=Response did not match the expected structure");
         return new AdvisorProviderException("ADVISOR_INVALID_RESPONSE", HttpStatus.BAD_GATEWAY,
                 "The business advisor returned an incomplete response. Please try again.");
-    }
-
-    private static boolean isTimeout(Throwable exception) {
-        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
-            if (cause instanceof SocketTimeoutException || cause instanceof HttpTimeoutException) return true;
-        }
-        return false;
     }
 
     private static Throwable rootCause(Throwable exception) {
