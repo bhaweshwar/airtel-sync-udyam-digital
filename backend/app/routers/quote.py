@@ -1,4 +1,5 @@
-"""Recommend + quote API. WS1 owns this file. STUB (Phase 0): delegates to the engine stubs."""
+"""Recommend + quote API. WS1 owns this file. Prices always come from the engine; the client only sends ids and
+quantities."""
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -18,6 +19,7 @@ def recommend(req: RecommendRequest) -> Quote:
 
 @router.post("/quote", response_model=Quote)
 def quote(req: QuoteRequest) -> Quote:
-    q = engine.price(req.profile, req.selected)
+    previous = store.get_quote(req.quote_id) if req.quote_id else None
+    q = engine.price(req.profile, req.selected, previous)
     store.save_quote(q)
     return q
