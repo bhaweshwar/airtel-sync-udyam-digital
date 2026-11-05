@@ -1,0 +1,9 @@
+{
+  "consent_id": "C-FIXTURE1",
+  "order_id": "UD-260715-0001",
+  "version": "2026-07-v1",
+  "purposes_accepted": [
+    "kyc_verification"
+  ],
+  "created_at": "2026-07-15T10:30:00Z"
+}

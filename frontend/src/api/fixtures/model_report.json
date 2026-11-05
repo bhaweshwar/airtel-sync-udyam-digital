@@ -1,0 +1,25 @@
+{
+  "auc_time_split": 0.7,
+  "top_decile_lift": 2.1,
+  "top20_capture": 0.38,
+  "train_rows": 3300,
+  "test_rows": 1700,
+  "coefficients": [
+    {
+      "feature": "lead_source=Referral",
+      "weight": 1.21
+    },
+    {
+      "feature": "has_gstin=Y",
+      "weight": 1.05
+    },
+    {
+      "feature": "lead_source=WhatsApp campaign",
+      "weight": -0.84
+    }
+  ],
+  "caveat": {
+    "en": "This ranks who is likely to activate, not who activates because we call.",
+    "hi": "यह बताता है कि कौन चालू होने की संभावना रखता है, यह नहीं कि कॉल करने से कौन चालू होगा।"
+  }
+}

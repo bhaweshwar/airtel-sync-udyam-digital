@@ -1,0 +1,208 @@
+{
+  "session_id": "S-FIXTURE1",
+  "reply_text": "Here is a bundle that fits a 12-person clinic. You can switch extras on or off.",
+  "quick_replies": [
+    "Why this?",
+    "Make it cheaper",
+    "Talk to a person"
+  ],
+  "profile": {
+    "business_type": "Dental clinic",
+    "segment": "prof",
+    "city": "Kochi",
+    "city_tier": 2,
+    "state": "Kerala",
+    "employees": 12,
+    "sites": 1,
+    "has_gstin": true,
+    "gstin": "32TTNXB7384T1ZW",
+    "gstin_status": "Active",
+    "current_internet": "home_broadband",
+    "needs": [
+      "internet",
+      "email",
+      "security",
+      "cloud_backup"
+    ],
+    "budget_monthly_inr": null,
+    "language": "en"
+  },
+  "missing_fields": [],
+  "stage": "recommended",
+  "mode": "rules",
+  "quote": {
+    "quote_id": "Q-FIXTURE1",
+    "profile": {
+      "business_type": "Dental clinic",
+      "segment": "prof",
+      "city": "Kochi",
+      "city_tier": 2,
+      "state": "Kerala",
+      "employees": 12,
+      "sites": 1,
+      "has_gstin": true,
+      "gstin": "32TTNXB7384T1ZW",
+      "gstin_status": "Active",
+      "current_internet": "home_broadband",
+      "needs": [
+        "internet",
+        "email",
+        "security",
+        "cloud_backup"
+      ],
+      "budget_monthly_inr": null,
+      "language": "en"
+    },
+    "items": [
+      {
+        "product_id": "P02",
+        "name": "Biz Fibre 300",
+        "category": "Connectivity",
+        "unit": "per site",
+        "quantity": 1,
+        "unit_price_inr": 1649,
+        "monthly_inr": 1649,
+        "setup_inr": 0,
+        "contract_months": 12,
+        "install_days": 5,
+        "reason": {
+          "en": "Fast fibre for one clinic, with room for X-ray uploads and video calls.",
+          "hi": "एक क्लिनिक के लिए तेज़ फ़ाइबर, एक्स-रे अपलोड और वीडियो कॉल के लिए काफ़ी।"
+        },
+        "kind": "core"
+      },
+      {
+        "product_id": "P16",
+        "name": "Cloud Email & Office Suite",
+        "category": "Cloud & Productivity",
+        "unit": "per user",
+        "quantity": 12,
+        "unit_price_inr": 138,
+        "monthly_inr": 1656,
+        "setup_inr": 0,
+        "contract_months": 12,
+        "install_days": 1,
+        "reason": {
+          "en": "12 staff, so 12 email accounts on your clinic's own domain.",
+          "hi": "12 कर्मचारी, इसलिए आपके क्लिनिक के डोमेन पर 12 ईमेल खाते।"
+        },
+        "kind": "core"
+      },
+      {
+        "product_id": "P20",
+        "name": "Endpoint Security",
+        "category": "Security",
+        "unit": "per device",
+        "quantity": 12,
+        "unit_price_inr": 124,
+        "monthly_inr": 1488,
+        "setup_inr": 0,
+        "contract_months": 12,
+        "install_days": 1,
+        "reason": {
+          "en": "Patient records need protection on every computer.",
+          "hi": "हर कंप्यूटर पर मरीज़ों के रिकॉर्ड की सुरक्षा ज़रूरी है।"
+        },
+        "kind": "core"
+      },
+      {
+        "product_id": "P17",
+        "name": "Cloud Backup 1 TB",
+        "category": "Cloud & Productivity",
+        "unit": "per account",
+        "quantity": 1,
+        "unit_price_inr": 599,
+        "monthly_inr": 599,
+        "setup_inr": 0,
+        "contract_months": 12,
+        "install_days": 1,
+        "reason": {
+          "en": "A daily copy of your records, so a broken laptop loses nothing.",
+          "hi": "रिकॉर्ड की रोज़ाना कॉपी, ताकि लैपटॉप ख़राब होने पर कुछ न खोए।"
+        },
+        "kind": "core"
+      }
+    ],
+    "addons_available": [
+      {
+        "product_id": "P23",
+        "name": "Cloud CCTV",
+        "category": "IoT & Physical",
+        "unit": "per camera",
+        "quantity": 2,
+        "unit_price_inr": 249,
+        "monthly_inr": 498,
+        "setup_inr": 3600,
+        "contract_months": 12,
+        "install_days": 4,
+        "reason": {
+          "en": "Two cameras for the reception and the entrance.",
+          "hi": "रिसेप्शन और प्रवेश के लिए दो कैमरे।"
+        },
+        "kind": "addon"
+      },
+      {
+        "product_id": "P11",
+        "name": "Static IP",
+        "category": "Connectivity",
+        "unit": "per IP",
+        "quantity": 1,
+        "unit_price_inr": 250,
+        "monthly_inr": 250,
+        "setup_inr": 0,
+        "contract_months": 12,
+        "install_days": 1,
+        "reason": {
+          "en": "Needed if your dental software is reached from outside.",
+          "hi": "अगर डेंटल सॉफ़्टवेयर बाहर से खोलना हो तो ज़रूरी।"
+        },
+        "kind": "addon"
+      },
+      {
+        "product_id": "P09",
+        "name": "Backup 4G/5G Failover",
+        "category": "Connectivity",
+        "unit": "per site",
+        "quantity": 1,
+        "unit_price_inr": 549,
+        "monthly_inr": 549,
+        "setup_inr": 1500,
+        "contract_months": 12,
+        "install_days": 3,
+        "reason": {
+          "en": "Keeps appointments and payments running if the fibre goes down.",
+          "hi": "फ़ाइबर बंद होने पर भी अपॉइंटमेंट और भुगतान चलते रहें।"
+        },
+        "kind": "addon"
+      }
+    ],
+    "ineligible": [
+      {
+        "product_id": "P03",
+        "name": "Biz Fibre 1G",
+        "reason_code": "TIER",
+        "reason": {
+          "en": "Biz Fibre 1G is only sold in tier 1 cities. Kochi is tier 2.",
+          "hi": "Biz Fibre 1G सिर्फ़ टियर 1 शहरों में मिलता है। कोच्चि टियर 2 है।"
+        }
+      },
+      {
+        "product_id": "P10",
+        "name": "Managed SD-WAN",
+        "reason_code": "SITES",
+        "reason": {
+          "en": "SD-WAN is for businesses with 3 or more sites.",
+          "hi": "SD-WAN तीन या ज़्यादा जगहों वाले व्यवसायों के लिए है।"
+        }
+      }
+    ],
+    "monthly_total_inr": 5392,
+    "one_time_total_inr": 0,
+    "gst_rate": 0.18,
+    "monthly_total_with_gst_inr": 6363,
+    "contract_months": 12,
+    "notices": [],
+    "valid_until": "2026-07-30",
+    "gst_products_blocked": false
+  }
+}

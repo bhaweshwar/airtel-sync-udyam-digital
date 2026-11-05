@@ -1,0 +1,16 @@
+{
+  "doc_type": "gst_certificate",
+  "detected_type": "gst_certificate",
+  "readable": true,
+  "quality": {
+    "blur_score": 812.4,
+    "blurry": false,
+    "skew_deg": 0.0
+  },
+  "fields": {
+    "gstin": "32TT••••••••1ZW",
+    "legal_name": "Balaji Dental Care LLP",
+    "constitution": "Limited Liability Partnership"
+  },
+  "issues": []
+}

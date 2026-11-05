@@ -1,0 +1,22 @@
+[
+  {
+    "order_id": "UD-260715-0001",
+    "verdict": "ACTION_REQUIRED",
+    "failing_checks": [
+      {
+        "code": "ADDRESS_PROOF_RECENT",
+        "status": "FAIL",
+        "message": {
+          "en": "Your utility bill is 257 days old. We need one from the last 90 days.",
+          "hi": "आपका बिल 257 दिन पुराना है। हमें पिछले 90 दिनों का बिल चाहिए।"
+        },
+        "fix_hint": {
+          "en": "Upload a bill dated after 16 April 2026.",
+          "hi": "16 अप्रैल 2026 के बाद का बिल अपलोड करें।"
+        },
+        "doc_type": "address_proof"
+      }
+    ],
+    "created_at": "2026-07-15T10:30:00Z"
+  }
+]

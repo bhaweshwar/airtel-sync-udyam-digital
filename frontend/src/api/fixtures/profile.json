@@ -1,0 +1,21 @@
+{
+  "business_type": "Dental clinic",
+  "segment": "prof",
+  "city": "Kochi",
+  "city_tier": 2,
+  "state": "Kerala",
+  "employees": 12,
+  "sites": 1,
+  "has_gstin": true,
+  "gstin": "32TTNXB7384T1ZW",
+  "gstin_status": "Active",
+  "current_internet": "home_broadband",
+  "needs": [
+    "internet",
+    "email",
+    "security",
+    "cloud_backup"
+  ],
+  "budget_monthly_inr": null,
+  "language": "en"
+}

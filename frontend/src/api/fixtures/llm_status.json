@@ -1,0 +1,19 @@
+{
+  "providers": [
+    {
+      "name": "groq",
+      "configured": false,
+      "ok": null,
+      "model": "llama-3.3-70b-versatile",
+      "error": null
+    },
+    {
+      "name": "gemini",
+      "configured": false,
+      "ok": null,
+      "model": "gemini-2.5-flash",
+      "error": null
+    }
+  ],
+  "active": null
+}

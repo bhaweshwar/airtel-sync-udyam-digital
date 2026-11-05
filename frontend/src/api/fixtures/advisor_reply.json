@@ -1,0 +1,36 @@
+{
+  "session_id": "S-FIXTURE1",
+  "reply_text": "Thanks! How many people work at your clinic, including you?",
+  "quick_replies": [
+    "1–5",
+    "6–20",
+    "21–50",
+    "More than 50"
+  ],
+  "profile": {
+    "business_type": "Dental clinic",
+    "segment": "prof",
+    "city": "Kochi",
+    "city_tier": 2,
+    "state": "Kerala",
+    "employees": null,
+    "sites": null,
+    "has_gstin": null,
+    "gstin": null,
+    "gstin_status": null,
+    "current_internet": null,
+    "needs": [],
+    "budget_monthly_inr": null,
+    "language": "en"
+  },
+  "missing_fields": [
+    "employees",
+    "sites",
+    "has_gstin",
+    "current_internet",
+    "needs"
+  ],
+  "stage": "asking",
+  "mode": "rules",
+  "quote": null
+}

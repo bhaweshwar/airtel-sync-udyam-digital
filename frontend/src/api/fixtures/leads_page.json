@@ -1,0 +1,41 @@
+{
+  "total": 2,
+  "items": [
+    {
+      "lead_id": "L00001",
+      "business_name": "Balaji Dental Care LLP",
+      "segment": "prof",
+      "city": "Kochi",
+      "city_tier": 2,
+      "source": "Field sales",
+      "preferred_language": "Malayalam",
+      "stage_reached": "KYC complete",
+      "drop_reason": "Installation delayed beyond 21 days",
+      "score": 0.31,
+      "band": "HOT",
+      "top_factors": [
+        "has a GSTIN",
+        "professional office"
+      ],
+      "suggested_channel": "PARTNER"
+    },
+    {
+      "lead_id": "L00004",
+      "business_name": "Zenith Diagnostics",
+      "segment": "prof",
+      "city": "Nagpur",
+      "city_tier": 2,
+      "source": "Channel partner",
+      "preferred_language": "Hindi",
+      "stage_reached": "Needs assessed",
+      "drop_reason": "Decided to wait",
+      "score": 0.12,
+      "band": "WARM",
+      "top_factors": [
+        "has a GSTIN",
+        "came through a channel partner"
+      ],
+      "suggested_channel": "INSIDE_SALES"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* Phase 0 owns this file. Theme tokens for the Accel Business look (fictional operator; no Airtel branding). */
+@theme {
+  --font-sans: "Mukta", "Noto Sans Devanagari", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-brand-50: #eaf4f6;
+  --color-brand-100: #cfe5ea;
+  --color-brand-500: #16748f;
+  --color-brand-600: #0e5a70;
+  --color-brand-700: #0a4557;
+  --color-accent-400: #f0b452;
+  --color-accent-500: #e29a2b;
+  --color-ink: #17212e;
+  --color-muted: #5b6676;
+  --color-line: #dbe1e7;
+  --color-surface: #f5f7f8;
+  --color-ok: #1d7a4e;
+  --color-ok-bg: #e3f3ea;
+  --color-warn: #9a5b00;
+  --color-warn-bg: #fbf0da;
+  --color-bad: #b42318;
+  --color-bad-bg: #fde8e6;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; }
+.tabular { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

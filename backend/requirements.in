@@ -1,0 +1,14 @@
+# Every dependency any workstream needs is pinned here in Phase 0.
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+numpy
+scikit-learn
+rapidocr-onnxruntime
+pillow
+python-multipart
+httpx
+rapidfuzz
+cryptography
+pytest

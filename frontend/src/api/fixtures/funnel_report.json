@@ -1,0 +1,31 @@
+{
+  "baseline": [
+    {
+      "stage": "Lead",
+      "count": 5000
+    },
+    {
+      "stage": "Contacted",
+      "count": 3406
+    },
+    {
+      "stage": "Needs assessed",
+      "count": 1974
+    },
+    {
+      "stage": "Quote accepted",
+      "count": 861
+    },
+    {
+      "stage": "KYC complete",
+      "count": 588
+    },
+    {
+      "stage": "Activated",
+      "count": 368
+    }
+  ],
+  "live": {
+    "KYC_PENDING": 1
+  }
+}

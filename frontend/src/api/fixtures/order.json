@@ -1,0 +1,173 @@
+{
+  "order_id": "UD-260715-0001",
+  "status": "KYC_PENDING",
+  "contact_name": "Anita Shah",
+  "phone_masked": "••••••3210",
+  "items": [
+    {
+      "product_id": "P02",
+      "name": "Biz Fibre 300",
+      "category": "Connectivity",
+      "unit": "per site",
+      "quantity": 1,
+      "unit_price_inr": 1649,
+      "monthly_inr": 1649,
+      "setup_inr": 0,
+      "contract_months": 12,
+      "install_days": 5,
+      "reason": {
+        "en": "Fast fibre for one clinic, with room for X-ray uploads and video calls.",
+        "hi": "एक क्लिनिक के लिए तेज़ फ़ाइबर, एक्स-रे अपलोड और वीडियो कॉल के लिए काफ़ी।"
+      },
+      "kind": "core"
+    },
+    {
+      "product_id": "P16",
+      "name": "Cloud Email & Office Suite",
+      "category": "Cloud & Productivity",
+      "unit": "per user",
+      "quantity": 12,
+      "unit_price_inr": 138,
+      "monthly_inr": 1656,
+      "setup_inr": 0,
+      "contract_months": 12,
+      "install_days": 1,
+      "reason": {
+        "en": "12 staff, so 12 email accounts on your clinic's own domain.",
+        "hi": "12 कर्मचारी, इसलिए आपके क्लिनिक के डोमेन पर 12 ईमेल खाते।"
+      },
+      "kind": "core"
+    },
+    {
+      "product_id": "P20",
+      "name": "Endpoint Security",
+      "category": "Security",
+      "unit": "per device",
+      "quantity": 12,
+      "unit_price_inr": 124,
+      "monthly_inr": 1488,
+      "setup_inr": 0,
+      "contract_months": 12,
+      "install_days": 1,
+      "reason": {
+        "en": "Patient records need protection on every computer.",
+        "hi": "हर कंप्यूटर पर मरीज़ों के रिकॉर्ड की सुरक्षा ज़रूरी है।"
+      },
+      "kind": "core"
+    },
+    {
+      "product_id": "P17",
+      "name": "Cloud Backup 1 TB",
+      "category": "Cloud & Productivity",
+      "unit": "per account",
+      "quantity": 1,
+      "unit_price_inr": 599,
+      "monthly_inr": 599,
+      "setup_inr": 0,
+      "contract_months": 12,
+      "install_days": 1,
+      "reason": {
+        "en": "A daily copy of your records, so a broken laptop loses nothing.",
+        "hi": "रिकॉर्ड की रोज़ाना कॉपी, ताकि लैपटॉप ख़राब होने पर कुछ न खोए।"
+      },
+      "kind": "core"
+    }
+  ],
+  "totals": {
+    "monthly_inr": 5392,
+    "one_time_inr": 0,
+    "monthly_with_gst_inr": 6363,
+    "contract_months": 12
+  },
+  "timeline": [
+    {
+      "key": "ordered",
+      "label": {
+        "en": "Order placed",
+        "hi": "ऑर्डर हो गया"
+      },
+      "state": "done",
+      "date": "2026-07-15",
+      "eta": null
+    },
+    {
+      "key": "kyc",
+      "label": {
+        "en": "Documents checked",
+        "hi": "दस्तावेज़ जाँचे गए"
+      },
+      "state": "current",
+      "date": null,
+      "eta": null
+    },
+    {
+      "key": "install_scheduled",
+      "label": {
+        "en": "Installation booked",
+        "hi": "इंस्टॉलेशन बुक"
+      },
+      "state": "upcoming",
+      "date": null,
+      "eta": null
+    },
+    {
+      "key": "installing",
+      "label": {
+        "en": "Engineer on site",
+        "hi": "इंजीनियर साइट पर"
+      },
+      "state": "upcoming",
+      "date": null,
+      "eta": null
+    },
+    {
+      "key": "active",
+      "label": {
+        "en": "Services live",
+        "hi": "सेवाएँ चालू"
+      },
+      "state": "upcoming",
+      "date": null,
+      "eta": "2026-07-21"
+    }
+  ],
+  "item_etas": [
+    {
+      "product_id": "P02",
+      "name": "Biz Fibre 300",
+      "eta": "2026-07-21"
+    },
+    {
+      "product_id": "P16",
+      "name": "Cloud Email & Office Suite",
+      "eta": "2026-07-17"
+    },
+    {
+      "product_id": "P20",
+      "name": "Endpoint Security",
+      "eta": "2026-07-17"
+    },
+    {
+      "product_id": "P17",
+      "name": "Cloud Backup 1 TB",
+      "eta": "2026-07-17"
+    }
+  ],
+  "eta_activation_date": "2026-07-21",
+  "install_slot": null,
+  "events": [
+    {
+      "ts": "2026-07-15T10:30:00Z",
+      "status": "KYC_PENDING",
+      "text": {
+        "en": "We received your order.",
+        "hi": "हमें आपका ऑर्डर मिल गया।"
+      }
+    }
+  ],
+  "next_action": {
+    "en": "Upload your business documents to continue.",
+    "hi": "आगे बढ़ने के लिए अपने व्यवसाय के दस्तावेज़ अपलोड करें।"
+  },
+  "created_at": "2026-07-15T10:30:00Z"
+}

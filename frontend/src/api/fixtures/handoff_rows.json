@@ -1,0 +1,25 @@
+[
+  {
+    "handoff_id": "H-FIXTURE1",
+    "session_id": "S-FIXTURE1",
+    "reason": "Asked to talk to a person",
+    "status": "open",
+    "created_at": "2026-07-15T10:30:00Z",
+    "profile": {
+      "business_type": "Dental clinic",
+      "segment": "prof",
+      "city": "Kochi",
+      "city_tier": 2,
+      "state": "Kerala",
+      "employees": null,
+      "sites": null,
+      "has_gstin": null,
+      "gstin": null,
+      "gstin_status": null,
+      "current_internet": null,
+      "needs": [],
+      "budget_monthly_inr": null,
+      "language": "en"
+    }
+  }
+]
