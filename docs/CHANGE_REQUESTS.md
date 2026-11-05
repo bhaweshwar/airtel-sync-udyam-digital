@@ -4,3 +4,5 @@ Append-only. A workstream that needs a change to a shared (Phase 0) file adds an
 
 | Date | From | File | Change needed | Why | Status |
 |---|---|---|---|---|---|
+| 2026-11-05 | WS1 | docs/CONTRACTS.md | In "Python interfaces", document `app.engine.price(profile, selected, previous=None)`: the optional `previous` Quote (the one being edited) makes removing a prerequisite also remove its dependants; without it, unmet dependencies get the cheapest eligible prerequisite added. Signature stays backward compatible. | `/api/quote` passes the stored quote for `quote_id`; WS4 re-pricing needs no change. | Open |
+| 2026-11-05 | WS1 | .claude/launch.json | Optional: per-worktree launch configs (or env-driven ports). Today it pins 8000/5173, which workstreams must not use, so the browser preview can't start a worktree's own servers by name. | WS1 ran `API_PORT=8001 WEB_PORT=5181 scripts/dev.sh` by hand instead. | Open |
