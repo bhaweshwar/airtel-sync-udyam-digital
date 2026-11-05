@@ -380,6 +380,7 @@ class HandoffRow(BaseModel):
     status: str
     created_at: datetime
     profile: Optional[BusinessProfile] = None
+    phone_masked: Optional[str] = None  # call-back number, if the owner left one
 
 
 class KycReviewRow(BaseModel):

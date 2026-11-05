@@ -235,7 +235,7 @@ export interface LeadRow {
 export interface LeadsPage { total: number; items: LeadRow[] }
 export interface LeadsQuery { limit?: number; offset?: number; channel?: Channel; segment?: Segment }
 
-export interface HandoffRow { handoff_id: string; session_id: string; reason: string; status: string; created_at: string; profile?: BusinessProfile | null }
+export interface HandoffRow { handoff_id: string; session_id: string; reason: string; status: string; created_at: string; profile?: BusinessProfile | null; phone_masked?: string | null }
 export interface KycReviewRow { order_id: string; verdict: KycVerdict; failing_checks: Check[]; created_at: string }
 export interface OrderRow { order_id: string; status: OrderStatus; contact_name: string; phone_masked: string; monthly_total_inr: number; created_at: string }
 

@@ -70,9 +70,14 @@ CREATE TABLE IF NOT EXISTS handoffs (
     session_id TEXT NOT NULL,
     reason TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    phone_enc TEXT,
+    phone_masked TEXT
 );
 """
+
+# Columns added after the first schema; init() adds them to databases created earlier.
+ADDED_COLUMNS = {"handoffs": {"phone_enc": "TEXT", "phone_masked": "TEXT"}}
 
 
 def _db_path() -> Path:
@@ -99,6 +104,11 @@ def init() -> None:
     with connect() as conn:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(SCHEMA)
+        for table, cols in ADDED_COLUMNS.items():
+            have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+            for col, kind in cols.items():
+                if col not in have:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {kind}")
 
 
 def reset() -> None:

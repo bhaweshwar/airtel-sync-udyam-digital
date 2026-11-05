@@ -203,6 +203,7 @@ function HandoffsTab({ k, onAuthFail }: TabProps) {
                   city: h.profile.city ?? "—", employees: h.profile.employees ?? "—",
                 })}{h.profile.needs.length ? ` · ${h.profile.needs.join(", ")}` : ""}</p>
               )}
+              {h.phone_masked && <p className="text-sm tabular">{t("backoffice.handoffs.phone", { phone: h.phone_masked })}</p>}
               <p className="text-xs text-muted">{h.handoff_id} · {h.session_id} · {when(h.created_at)}</p>
             </Card>
           </li>

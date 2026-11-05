@@ -73,12 +73,23 @@ def update_session(session_id: str, *, profile: BusinessProfile | None = None, m
 
 # ---------------------------------------------------------------- handoffs (WS2 writes, WS5 reads)
 
-def save_handoff(session_id: str, reason: str) -> str:
+def save_handoff(session_id: str, reason: str, phone: str | None = None) -> str:
+    """The phone (optional) is stored encrypted plus masked; only the masked copy is ever returned."""
     hid = new_id("H")
     with connect() as c:
         c.execute("INSERT INTO handoffs (id, session_id, reason, status, created_at) VALUES (?,?,?,?,?)",
                   (hid, session_id, reason, "open", _iso()))
+    if phone:
+        set_handoff_phone(hid, phone)
     return hid
+
+
+def set_handoff_phone(handoff_id: str, phone: str) -> None:
+    from .common.crypto import encrypt
+    from .common.mask import mask_phone
+    with connect() as c:
+        c.execute("UPDATE handoffs SET phone_enc = ?, phone_masked = ? WHERE id = ?",
+                  (encrypt(phone), mask_phone(phone), handoff_id))
 
 
 def list_handoffs() -> list[dict[str, Any]]:
@@ -88,7 +99,7 @@ def list_handoffs() -> list[dict[str, Any]]:
         ).fetchall()
     return [{
         "handoff_id": r["id"], "session_id": r["session_id"], "reason": r["reason"], "status": r["status"],
-        "created_at": datetime.fromisoformat(r["created_at"]),
+        "created_at": datetime.fromisoformat(r["created_at"]), "phone_masked": r["phone_masked"],
         "profile": BusinessProfile.model_validate_json(r["profile_json"]) if r["profile_json"] else None,
     } for r in rows]
 

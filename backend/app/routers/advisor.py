@@ -22,7 +22,7 @@ def message(req: AdvisorMessageRequest) -> AdvisorReply:
 
 @router.post("/advisor/handoff", response_model=HandoffResponse)
 def handoff(req: HandoffRequest) -> HandoffResponse:
-    hid = flow.handoff_request(req.session_id, req.reason)
+    hid = flow.handoff_request(req.session_id, req.reason, req.phone)
     return HandoffResponse(handoff_id=hid, message=lt(
         "Thanks. A person from Accel will call you back within 2 working hours.",
         "धन्यवाद। Accel का एक व्यक्ति 2 कामकाजी घंटों में आपको वापस कॉल करेगा।"))

@@ -269,16 +269,19 @@ def handle_message(req: AdvisorMessageRequest) -> AdvisorReply:
                   stage="recommended", mode=mode, quote=q)
 
 
-def handoff_request(session_id: str, reason: str) -> str:
-    """Explicit "Talk to a person" button. Works even if the session is unknown (the back office still sees the row)."""
+def handoff_request(session_id: str, reason: str, phone: str | None = None) -> str:
+    """Explicit "Talk to a person" button. Works even if the session is unknown (the back office still sees the row).
+    A call-back phone, if given, is stored encrypted on the hand-off."""
     session = store.get_session(session_id)
     clean = redact(reason)[:500] or HANDOFF_REASONS["asked"]
     if session is None:
-        return store.save_handoff(session_id, clean)
+        return store.save_handoff(session_id, clean, phone)
     messages = session["messages"]
     state = _state(messages)
     if not state.get("handoff_id"):
-        state["handoff_id"] = store.save_handoff(session_id, clean)
+        state["handoff_id"] = store.save_handoff(session_id, clean, phone)
+    elif phone:
+        store.set_handoff_phone(state["handoff_id"], phone)
     p = session["profile"]
     messages.append({"role": "assistant", "text": tpl.handoff("asked", p.language), "ts": store.now().isoformat(),
                      "stage": "handoff", "mode": session["mode"], "state": state})

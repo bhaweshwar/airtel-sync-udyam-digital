@@ -74,30 +74,45 @@ def test_store_roundtrip(fresh_db):
     assert store.withdraw_consent("UD-TEST-0001") == 1
 
 
-def test_stub_endpoints_answer_in_contract_shape(client, bo_headers):
+def test_endpoints_answer_in_contract_shape(client, bo_headers):
+    """One pass over every endpoint through the real flow: quote -> order -> consent gate -> tracker -> back office.
+    KYC OCR itself is covered by tests/test_ws3_kyc.py and scripts/kyc_eval.py, so no sample is run here."""
     from app.fixtures import profile
     p = profile().model_dump(mode="json")
-    c.Quote.model_validate(client.post("/api/recommend", json={"profile": p}).json())
+    q = c.Quote.model_validate(client.post("/api/recommend", json={"profile": p}).json())
     c.Quote.model_validate(client.post("/api/quote", json={"profile": p, "selected": [{"product_id": "P02", "quantity": 1}]}).json())
     assert len(client.get("/api/catalogue").json()) == 25
-    c.AdvisorReply.model_validate(client.post("/api/advisor/message", json={"text": "hello"}).json())
-    c.HandoffResponse.model_validate(client.post("/api/advisor/handoff", json={"session_id": "S-1", "reason": "x"}).json())
+
+    reply = c.AdvisorReply.model_validate(client.post("/api/advisor/message", json={"text": "hello"}).json())
+    c.HandoffResponse.model_validate(client.post("/api/advisor/handoff", json={
+        "session_id": reply.session_id, "reason": "x", "phone": "9876543210"}).json())
     c.LlmStatus.model_validate(client.get("/api/llm-status").json())
-    c.ConsentNotice.model_validate(client.get("/api/kyc/notice").json())
-    c.ConsentRecord.model_validate(client.post("/api/kyc/UD-1/consent", json={"version": "v1", "purposes_accepted": ["kyc_verification"]}).json())
-    assert client.delete("/api/kyc/UD-1/consent").status_code == 204
+
+    created = c.CreateOrderResponse.model_validate(client.post("/api/orders", json={
+        "quote_id": q.quote_id, "contact_name": "A", "phone": "9876543210"}).json())
+    oid, pin = created.order_id, created.pin
+    assert client.post("/api/orders", json={"quote_id": "Q-NOPE", "contact_name": "A", "phone": "9876543210"}).status_code == 404
+    assert client.get(f"/api/orders/{oid}", params={"pin": "0000" if pin != "0000" else "1111"}).status_code == 404
+
+    notice = c.ConsentNotice.model_validate(client.get("/api/kyc/notice").json())
     files = {"file": ("x.png", io.BytesIO(b"\x89PNG"), "image/png")}
-    c.DocumentResult.model_validate(client.post("/api/kyc/UD-1/documents", data={"doc_type": "gst_certificate"}, files=files).json())
-    c.KycResult.model_validate(client.post("/api/kyc/UD-1/submit").json())
-    c.KycResult.model_validate(client.post("/api/kyc/UD-1/sample/K03").json())
-    c.CreateOrderResponse.model_validate(client.post("/api/orders", json={"quote_id": "Q-1", "contact_name": "A", "phone": "9876543210"}).json())
-    c.Order.model_validate(client.get("/api/orders/UD-1", params={"pin": "1234"}).json())
-    c.SlotsResponse.model_validate(client.get("/api/orders/UD-1/slots", params={"pin": "1234"}).json())
-    c.Order.model_validate(client.post("/api/orders/UD-1/advance", params={"pin": "1234"}).json())
+    assert client.post(f"/api/kyc/{oid}/documents", data={"doc_type": "gst_certificate"}, files=files).status_code == 403
+    assert client.post(f"/api/kyc/{oid}/submit").status_code == 403
+    c.ConsentRecord.model_validate(client.post(f"/api/kyc/{oid}/consent", json={
+        "version": notice.version, "purposes_accepted": ["kyc_verification"]}).json())
+    assert client.delete(f"/api/kyc/{oid}/consent").status_code == 204
+
+    c.Order.model_validate(client.get(f"/api/orders/{oid}", params={"pin": pin}).json())
+    c.SlotsResponse.model_validate(client.get(f"/api/orders/{oid}/slots", params={"pin": pin}).json())
+    c.Order.model_validate(client.post(f"/api/orders/{oid}/advance", params={"pin": pin}).json())
+
     assert client.get("/api/backoffice/leads").status_code == 401
     c.LeadsPage.model_validate(client.get("/api/backoffice/leads", headers=bo_headers).json())
     for path in ("handoffs", "kyc-reviews", "orders"):
         assert isinstance(client.get(f"/api/backoffice/{path}", headers=bo_headers).json(), list)
+    handoffs = client.get("/api/backoffice/handoffs", headers=bo_headers).json()
+    assert any(h["phone_masked"] == "••••••3210" for h in handoffs)
+    assert "9876543210" not in str(handoffs)
     c.ModelReport.model_validate(client.get("/api/backoffice/model", headers=bo_headers).json())
     c.FunnelReport.model_validate(client.get("/api/backoffice/funnel", headers=bo_headers).json())
     c.Meta.model_validate(client.get("/api/meta").json())

@@ -36,6 +36,7 @@ Need a change? Append it to [CHANGE_REQUESTS.md](CHANGE_REQUESTS.md). Don't edit
 | `DocumentResult` | `doc_type, detected_type, readable, quality{blur_score, blurry, skew_deg}, fields` (masked), `issues: Check[]` |
 | `KycResult` | `order_id, verdict` (VERIFIED/ACTION_REQUIRED/MANUAL_REVIEW/REJECTED), `checks[], gst_products_blocked, created_at` |
 | `Order` | `order_id, status, contact_name, phone_masked, items[], totals, timeline[{key, label, state, date?, eta?}], item_etas[], eta_activation_date, install_slot?, events[], next_action?, created_at` |
+| `HandoffRow` | `handoff_id, session_id, reason, status, created_at, profile?, phone_masked?` (the call-back number, stored encrypted; set from `HandoffRequest.phone`) |
 | `LeadRow` | `lead_id, business_name, segment, city, city_tier, source, preferred_language, stage_reached, drop_reason, score (0–1), band` (HOT/WARM/COLD), `top_factors[2], suggested_channel` (FIELD/PARTNER/INSIDE_SALES/SELF_SERVE_LINK) |
 
 **Order status machine (WS4 enforces):**
@@ -86,7 +87,7 @@ Every endpoint already exists as a stub that returns a fixture of the right shap
 | Function | Called by | Owner |
 |---|---|---|
 | `app.engine.recommend(profile) -> Quote` | WS2 advisor, `/api/recommend` | WS1 |
-| `app.engine.price(profile, selected) -> Quote` | WS4 orders (re-price at order time), `/api/quote` | WS1 |
+| `app.engine.price(profile, selected, previous=None) -> Quote` | WS4 orders (re-price at order time), `/api/quote`. With `previous` (the quote being edited), removing a prerequisite also removes its dependants; without it, an unmet dependency gets the cheapest eligible prerequisite added | WS1 |
 | `app.orders.hooks.on_kyc_result(order_id, KycResult)` | WS3 after every submit | WS4 |
 
 These are stubs on `main` until the owner's branch is merged. Code against the signature.
