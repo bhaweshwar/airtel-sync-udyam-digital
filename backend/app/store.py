@@ -11,12 +11,16 @@ import secrets
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+from .config import settings
 from .contracts import BusinessProfile, Check, ConsentRecord, InstallSlot, LocalText, OrderEvent, Quote
 from .db import connect
 
 
 def now() -> datetime:
-    return datetime.now(timezone.utc)
+    """The app clock: the real time of day on settings.today (the case data's reference date, 2026-07-15 by default),
+    so event timestamps line up with order dates, slots and the 90-day address-proof rule."""
+    real = datetime.now(timezone.utc)
+    return datetime.combine(settings.today, real.timetz())
 
 
 def _iso(dt: datetime | None = None) -> str:

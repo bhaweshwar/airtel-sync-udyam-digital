@@ -6,6 +6,7 @@ Run: cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000
 from __future__ import annotations
 
 import logging
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -41,6 +42,14 @@ for name in ("uvicorn.access", "uvicorn.error", "udyam"):
 async def lifespan(_: FastAPI):
     db.init()
     data.warm()
+    if settings.warm_ocr:
+        def _warm_ocr() -> None:
+            try:
+                from .kyc import ocr
+                ocr._get_engine()
+            except Exception:  # never block startup on the OCR models
+                log.exception("OCR warm-up failed; models will load on the first KYC check")
+        threading.Thread(target=_warm_ocr, name="warm-ocr", daemon=True).start()
     if settings.using_dev_secrets:
         log.warning("Using development secrets (BACKOFFICE_KEY / FERNET_KEY). Set them before any real deployment.")
     yield

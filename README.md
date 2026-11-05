@@ -12,7 +12,10 @@ Accel staff get a back office that ranks the leads the journey didn't close.
 
 ## Status
 
-**Phase 0: shared scaffold.** It contains contracts, data loaders, the SQLite store, GSTIN validation, registry lookups, stub endpoints and the frontend shell. The modules are built in six parallel workstreams; see [docs/WORKSTREAMS.md](docs/WORKSTREAMS.md).
+All four required modules work end to end, plus the back office with a lead score, browser voice input in the advisor, and a Docker/Render deployment setup.
+- **Checks:** 61 backend tests; `scripts/kyc_eval.py` matches all 12 sample applicants; `scripts/advisor_scenarios.py` passes all 12 scenarios in rules mode.
+- **Submission pack:** in `docs/deck/`, `docs/architecture/`, `docs/privacy/` and `docs/demo-script.md`.
+- **How it was built:** in six parallel workstreams; see [docs/WORKSTREAMS.md](docs/WORKSTREAMS.md).
 
 ## Run it
 
@@ -29,6 +32,20 @@ scripts/dev.sh              # API on :8000, web on :5173
 - **Single server:** run `npm --prefix frontend run build`. FastAPI then serves the built app at http://127.0.0.1:8000.
 - **Mock mode:** `npm --prefix frontend run mock` uses sample data and makes no server calls.
 - **Tests:** `cd backend && .venv/bin/python -m pytest`
+
+## Deploy (Render)
+
+The `Dockerfile` builds the React app and serves it from FastAPI in one container. `render.yaml` describes the service.
+
+1. Push this repository to GitHub.
+2. In Render, choose **New > Blueprint** and pick the repository. Render reads `render.yaml`.
+3. In the service's **Environment** tab, add `GROQ_API_KEY` and/or `GEMINI_API_KEY`. Without them the advisor runs in offline rules mode.
+   - `BACKOFFICE_KEY` and `FERNET_KEY` are generated for you. The staff passcode is the `BACKOFFICE_KEY` value.
+4. Before a demo, open the URL once to wake it. The free plan sleeps when idle, and the first request takes about 30 s.
+
+Limits of the free setup:
+- **Demo data resets.** The SQLite database lives on the container's disk, so orders disappear on every restart or redeploy.
+- **Demo mode is on.** Sample applicants and the "move to next step" button are visible; set `DEMO_MODE=0` to hide them.
 
 ## Layout
 

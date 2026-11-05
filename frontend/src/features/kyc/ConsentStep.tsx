@@ -43,8 +43,9 @@ export function ConsentStep({ orderId, notice: banner, onDone }: { orderId: stri
         <ul className="mt-4 space-y-3">
           {notice.purposes.map((p) => (
             <li key={p.id}>
-              <label className="flex items-start gap-3">
-                <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-brand-600" checked={!!accepted[p.id]}
+              <label className="flex items-start gap-3" htmlFor={`consent-${p.id}`}>
+                <input type="checkbox" id={`consent-${p.id}`} aria-label={lt(p.text)}
+                  className="mt-1 h-5 w-5 shrink-0 accent-brand-600" checked={!!accepted[p.id]}
                   onChange={(e) => setAccepted((a) => ({ ...a, [p.id]: e.target.checked }))} />
                 <span className="min-w-0">
                   <span className="block">{lt(p.text)}</span>

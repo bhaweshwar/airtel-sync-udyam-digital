@@ -1,0 +1,23 @@
+# Render Blueprint: one Docker web service. Render > New > Blueprint > pick this repository.
+# The SQLite file lives on the container's disk, so demo orders reset whenever the service restarts or redeploys.
+services:
+  - type: web
+    name: udyam-digital
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEMO_MODE
+        value: "1"
+      - key: TODAY
+        value: "2026-07-15"
+      - key: BACKOFFICE_KEY
+        generateValue: true   # read it in the service's Environment tab
+      - key: FERNET_KEY
+        generateValue: true   # any secret works; the app derives a Fernet key from it
+      - key: LLM_ORDER
+        value: groq,gemini
+      - key: GROQ_API_KEY
+        sync: false           # set in the dashboard; never committed
+      - key: GEMINI_API_KEY
+        sync: false

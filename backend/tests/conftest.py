@@ -11,6 +11,7 @@ import tempfile
 _tmp = tempfile.mkdtemp(prefix="udyam-test-")
 os.environ["DB_PATH"] = os.path.join(_tmp, "test.db")
 os.environ.setdefault("DEMO_MODE", "1")
+os.environ["WARM_OCR"] = "0"  # tests that need OCR load it themselves
 os.environ.setdefault("BACKOFFICE_KEY", "test-key")
 os.environ["GROQ_API_KEY"] = ""  # tests never call a real LLM
 os.environ["GEMINI_API_KEY"] = ""
