@@ -1,0 +1,54 @@
+%% Udyam Digital: solution architecture and data flows (synthetic data only)
+flowchart LR
+  subgraph Phone["Owner's phone: mobile-first SPA (React, EN/HI)"]
+    direction TB
+    UIA["Advisor chat + voice<br/>(browser speech-to-text)"]
+    UIQ["Quote + add-on toggles"]
+    UIK["Consent + KYC upload"]
+    UIT["Order tracker<br/>(order ID + PIN)"]
+  end
+
+  BO["Back office (sales / partners)<br/>passcode header"]
+
+  subgraph API["One FastAPI app (HTTPS, /api)"]
+    direction TB
+    ADV["Advisor<br/>LLM chain: Groq → Gemini → rules"]
+    ENG["Rules engine<br/>eligibility, dependencies, price, GST"]
+    KYC["Smart KYC<br/>RapidOCR in memory + checks"]
+    REG["Mock GSTIN / Udyam registries"]
+    ORD["Orders + tracker<br/>status machine, slots, ETAs"]
+    LEAD["Back office<br/>lead score + suggested channel"]
+    MASK["Masking + log redaction<br/>(GSTIN, Udyam, ID, phone)"]
+  end
+
+  LLM[("External LLM APIs<br/>Groq, Gemini")]
+  DB[("SQLite<br/>sessions, quotes, orders, consents,<br/>KYC results — phone encrypted")]
+  CSV[("Case CSVs (read-only)<br/>catalogue, leads, registries")]
+
+  UIA -- "business description (text), language" --> ADV
+  ADV -- "business description only<br/>no IDs, no images" --> LLM
+  LLM -- "reply text + extracted profile" --> ADV
+  ADV -- "profile" --> ENG
+  UIQ -- "profile + selected add-ons<br/>(GSTIN only if a product needs it)" --> ENG
+  ENG -- "quote" --> UIQ
+  ENG -- "catalogue" --- CSV
+  UIQ -- "contact name + phone" --> ORD
+  UIK -- "consent: version + purposes" --> KYC
+  UIK -- "document photos<br/>processed in memory, never stored" --> KYC
+  KYC -- "GSTIN / Udyam lookup" --> REG
+  REG --- CSV
+  KYC -- "verdict + masked fields only" --> DB
+  KYC -- "on_kyc_result" --> ORD
+  ORD -- "order, timeline, phone (encrypted)" --> DB
+  UIT -- "order ID + PIN" --> ORD
+  ENG -- "quote" --> DB
+  ADV -- "session + handoff" --> DB
+  LEAD -- "leads" --- CSV
+  LEAD -- "handoffs, orders, KYC reviews" --- DB
+  BO -- "passcode" --> LEAD
+  LEAD -- "masked identifiers only" --> BO
+
+  classDef pii fill:#fde8e8,stroke:#c81e1e,color:#111
+  classDef store fill:#eef2ff,stroke:#3730a3,color:#111
+  class KYC,ORD pii
+  class DB,CSV,LLM store
