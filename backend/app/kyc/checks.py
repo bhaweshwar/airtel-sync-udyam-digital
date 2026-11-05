@@ -384,13 +384,17 @@ def run_checks(docs: dict[DocType, ParsedDoc], today: date) -> Outcome:
                                      f"ID “{signer}” की है, पर मालिक (प्रोप्राइटर) “{proprietor}” हैं।",
                                      ("Upload the proprietor's own ID.", "मालिक (प्रोप्राइटर) की अपनी ID अपलोड करें।"),
                                      "signatory_id"))
-        else:
-            kind = constitution or "firm"
+        elif constitution:
             checks.append(_check("SIGNATORY_MATCH", "WARN",
-                                 f"This business is a {kind}. These documents can't prove that “{signer}” may sign "
-                                 "for it, so our team may ask for an authorisation letter.",
-                                 f"यह व्यवसाय एक {kind} है। इन दस्तावेज़ों से यह साबित नहीं होता कि “{signer}” इसके लिए "
-                                 "हस्ताक्षर कर सकते हैं, इसलिए हमारी टीम एक अधिकार-पत्र माँग सकती है।", doc="signatory_id"))
+                                 f"This business is a {constitution}. These documents can't prove that \u201c{signer}\u201d may "
+                                 "sign for it, so our team may ask for an authorisation letter.",
+                                 f"यह व्यवसाय एक {constitution} है। इन दस्तावेज़ों से यह साबित नहीं होता कि \u201c{signer}\u201d "
+                                 "इसके लिए हस्ताक्षर कर सकते हैं, इसलिए हमारी टीम एक अधिकार-पत्र माँग सकती है।", doc="signatory_id"))
+        else:
+            checks.append(_check("SIGNATORY_MATCH", "WARN",
+                                 "We couldn't read the business type yet, so we can't check who may sign for it.",
+                                 "हम अभी व्यवसाय का प्रकार नहीं पढ़ पाए, इसलिए यह नहीं जाँच सकते कि हस्ताक्षर कौन कर सकता है।",
+                                 doc="signatory_id"))
         checks += [c for c in per_doc["signatory_id"] if c.code == "ID_VALID"]
 
     # 6. address proof: recent, and at the GST address

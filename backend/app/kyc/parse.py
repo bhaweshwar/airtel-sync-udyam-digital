@@ -299,6 +299,8 @@ def parse_document(doc_type: DocType, lines: list[OcrLine], page_width: int, *, 
     fields = parse_fields(lines, template, page_width)
     doc = ParsedDoc(doc_type=doc_type, detected_type=detected, blurry=blurry, blur_score=blur_score,
                     skew_deg=skew_deg, fields=fields)
+    for key in NAME_FIELDS & fields.keys():
+        fields[key] = respace(fields[key])
     if template == "gst_certificate":
         raw = fields.get("gstin") or find_gstin(" ".join(ln.text for ln in lines)) or ""
         if raw:
@@ -307,6 +309,16 @@ def parse_document(doc_type: DocType, lines: list[OcrLine], page_width: int, *, 
     if template == "udyam_certificate" and fields.get("udyam_number"):
         fields["udyam_number"] = normalize_udyam_read(fields["udyam_number"])
     return doc
+
+
+NAME_FIELDS = {"legal_name", "trade_name", "enterprise_name", "name", "business_name", "holder_name"}
+
+
+def respace(text: str) -> str:
+    """Put back spaces OCR drops between words in names: 'NishaArora' -> 'Nisha Arora', 'Tours&Travels' -> 'Tours & Travels'."""
+    text = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", text)
+    text = re.sub(r"\s*&\s*", " & ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def normalize_udyam_read(raw: str) -> str:
