@@ -130,7 +130,7 @@ export function KycPage() {
 
   return (
     <div>
-      <PageTitle title={result ? t("kyc.result.title") : consented ? t("kyc.docs.title") : t("kyc.title")} subtitle={t("kyc.order", { id: orderId })} />
+      <PageTitle title={closedStatus !== null ? t("kyc.title") : result ? t("kyc.result.title") : consented ? t("kyc.docs.title") : t("kyc.title")} subtitle={t("kyc.order", { id: orderId })} />
       {withdrawn && !consented && <div className="mb-4"><Banner tone="info">{t("kyc.withdraw.done")}</Banner></div>}
       {error && <div className="mb-4"><Banner tone="bad">{error}</Banner></div>}
       {closedStatus !== null ? (
