@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { api, ApiError } from "../../api/client";
 import type {
-  Channel, FunnelReport, HandoffRow, KycReviewRow, LeadBand, LeadsPage, ModelReport, OrderRow, Segment,
+  Channel, FunnelReport, HandoffRow, KycDecision, KycReviewRow, LeadBand, LeadsPage, ModelReport, OrderRow, Segment,
 } from "../../api/types";
 import { useT } from "../../i18n";
 import { useMeta } from "../../state/meta";
@@ -215,9 +215,25 @@ function HandoffsTab({ k, onAuthFail }: TabProps) {
 
 function KycTab({ k, onAuthFail }: TabProps) {
   const { t, lt } = useT();
-  const { data, loading, error } = useLoad<KycReviewRow[]>(() => api.backoffice.kycReviews(k), onAuthFail, [k]);
+  const { data, loading, error, reload } = useLoad<KycReviewRow[]>(() => api.backoffice.kycReviews(k), onAuthFail, [k]);
+  const [busy, setBusy] = useState("");
+  const [note, setNote] = useState<{ tone: Tone; text: string }>();
+  const decide = async (id: string, decision: KycDecision) => {
+    setBusy(id); setNote(undefined);
+    try {
+      await api.backoffice.kycDecision(k, id, decision);
+      setNote({ tone: decision === "approve" ? "ok" : "warn", text: t(decision === "approve" ? "backoffice.kyc.approved" : "backoffice.kyc.rejected", { id }) });
+      reload();
+    } catch (e) {
+      setNote({ tone: "bad", text: e instanceof Error ? e.message : t("common.error") });
+    } finally {
+      setBusy("");
+    }
+  };
   return (
-    <Status loading={loading} error={error} empty={data?.length === 0}>
+    <div className="space-y-3">
+    {note && <Banner tone={note.tone}>{note.text}</Banner>}
+    <Status loading={loading && !data} error={error} empty={data?.length === 0}>
       <ul className="space-y-2">
         {data?.map((r) => (
           <li key={r.order_id}>
@@ -235,11 +251,21 @@ function KycTab({ k, onAuthFail }: TabProps) {
                   </li>
                 ))}
               </ul>
+              {r.verdict === "MANUAL_REVIEW" && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" disabled={busy === r.order_id} onClick={() => decide(r.order_id, "approve")}>{t("backoffice.kyc.approve")}</Button>
+                  <Button size="sm" variant="secondary" disabled={busy === r.order_id}
+                    onClick={() => { if (window.confirm(t("backoffice.kyc.rejectConfirm", { id: r.order_id }))) void decide(r.order_id, "reject"); }}>
+                    {t("backoffice.kyc.reject")}
+                  </Button>
+                </div>
+              )}
             </Card>
           </li>
         ))}
       </ul>
     </Status>
+    </div>
   );
 }
 

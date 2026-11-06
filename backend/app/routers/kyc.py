@@ -33,6 +33,26 @@ def _require_consent(order_id: str) -> None:
     if store.get_active_consent(order_id) is None:
         raise HTTPException(403, detail={"code": "CONSENT_REQUIRED",
                                          "message": "Please read the notice and give consent before we check your documents."})
+    _require_open_kyc(order_id)
+
+
+# KYC can run (and re-run) only while the order is still at the KYC stage. Once it is verified, with our team for
+# review, rejected or further along, a new check could not change the order, so the screen and the tracker would
+# disagree; refuse it instead.
+KYC_OPEN_STATUSES = frozenset({"QUOTE_ACCEPTED", "KYC_PENDING", "KYC_ACTION_REQUIRED"})
+_CLOSED_MESSAGE = {
+    "KYC_REVIEW": "Your documents are already with our team for a quick check. Track your order for updates.",
+    "REJECTED": "This order could not be verified, so documents can't be checked again. Please call support.",
+}
+
+
+def _require_open_kyc(order_id: str) -> None:
+    row = store.get_order(order_id)
+    if row is None or row["status"] in KYC_OPEN_STATUSES:
+        return
+    status = row["status"]
+    message = _CLOSED_MESSAGE.get(status, "Your documents are already verified. Track your order for the next step.")
+    raise HTTPException(409, detail={"code": "KYC_CLOSED", "message": message, "status": status})
 
 
 @router.get("/notice", response_model=ConsentNotice)

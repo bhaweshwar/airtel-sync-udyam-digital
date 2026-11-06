@@ -68,9 +68,13 @@ def reset_attempts() -> None:
         _failures.clear()
 
 
+class TooManyTries(Exception):
+    """Raised by authorise() while an order ID is locked after too many wrong PINs."""
+
+
 def authorise(order_id: str, pin: Optional[str]) -> Optional[dict[str, Any]]:
     """The order row if the PIN matches, else None. Wrong PINs for the same ID (real or not) are counted;
-    after 10 failures in a minute every attempt fails until the window clears, so the PIN can't be brute-forced
+    after 10 failures in a minute every attempt raises TooManyTries until the window clears, so the PIN can't be brute-forced
     and the answer never reveals whether the order exists. Correct PINs don't count, so 10 s polling is fine."""
     now = time.monotonic()
     with _lock:
@@ -78,7 +82,8 @@ def authorise(order_id: str, pin: Optional[str]) -> Optional[dict[str, Any]]:
         while q and now - q[0] > 60:
             q.popleft()
         if len(q) >= MAX_FAILED_PER_MINUTE:
-            return None
+            # Locked IDs answer the same way whether the order exists or not, so this reveals nothing.
+            raise TooManyTries(order_id)
     row = store.get_order(order_id)
     if row and pin and verify_pin(pin, row["pin_hash"]):
         return row
@@ -219,10 +224,12 @@ def timeline(status: str, slot: InstallSlot | None, eta_active: date | None) -> 
     current, blocked = _CURRENT[status]
     etas = {"installing": install_start(status, slot), "active": eta_active} if status != "REJECTED" else {}
     out = []
+    last_done = settings.today
     for idx, (key, label) in enumerate(STEPS):
         if idx < current:
-            out.append(TimelineStep(key=key, label=label, state="done",
-                                    date=slot.date if key == "installing" and slot else settings.today))
+            # A done step can't be dated before the step it follows (services go live after the engineer's visit).
+            last_done = max(last_done, slot.date if key == "installing" and slot else settings.today)
+            out.append(TimelineStep(key=key, label=label, state="done", date=last_done))
         else:
             state = ("blocked" if blocked else "current") if idx == current else "upcoming"
             out.append(TimelineStep(key=key, label=label, state=state, eta=etas.get(key)))

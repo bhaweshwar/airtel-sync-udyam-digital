@@ -34,6 +34,8 @@ export function KycPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [withdrawn, setWithdrawn] = useState(false);
+  // Set when the server says this order is past KYC (verified, under review, rejected): no more checks.
+  const [closedStatus, setClosedStatus] = useState<string | null>(null);
 
   useEffect(() => { if (result) window.scrollTo({ top: 0 }); }, [result]);
 
@@ -53,6 +55,11 @@ export function KycPage() {
       saveConsent(orderId, false);
       setConsented(false);
       setConsentNotice(t("kyc.consent.expired"));
+      return;
+    }
+    if (e instanceof ApiError && e.code === "KYC_CLOSED") {
+      setResult(null);
+      setClosedStatus(String(e.detail.status ?? ""));
       return;
     }
     setError(e instanceof ApiError ? e.message : t("common.error"));
@@ -85,7 +92,11 @@ export function KycPage() {
   }
 
   async function retake(doc: DocType, file: File) {
+    // Reading the new photo and re-checking takes a while on a small server: show progress from the start.
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setBusy(t("kyc.retaking"));
     if (await upload(doc, file)) await submit();
+    else setBusy(null);
   }
 
   async function sample(id: string) {
@@ -122,7 +133,14 @@ export function KycPage() {
       <PageTitle title={result ? t("kyc.result.title") : consented ? t("kyc.docs.title") : t("kyc.title")} subtitle={t("kyc.order", { id: orderId })} />
       {withdrawn && !consented && <div className="mb-4"><Banner tone="info">{t("kyc.withdraw.done")}</Banner></div>}
       {error && <div className="mb-4"><Banner tone="bad">{error}</Banner></div>}
-      {!consented ? (
+      {closedStatus !== null ? (
+        <div className="space-y-4">
+          <Banner tone={closedStatus === "REJECTED" ? "bad" : "info"} title={t("kyc.closed.title")}>
+            {t(["KYC_REVIEW", "REJECTED"].includes(closedStatus) ? `kyc.closed.${closedStatus}` : "kyc.closed.done")}
+          </Banner>
+          <Link to={`/track/${orderId}`} className="block"><Button full size="lg">{t("kyc.track")}</Button></Link>
+        </div>
+      ) : !consented ? (
         <ConsentStep orderId={orderId} notice={consentNotice}
           onDone={() => { saveConsent(orderId, true); setConsented(true); setWithdrawn(false); setConsentNotice(undefined); }} />
       ) : result ? (
@@ -130,7 +148,7 @@ export function KycPage() {
       ) : (
         <UploadStep slots={slots} onUpload={upload} onSubmit={submit} onSample={sample} busy={busy} />
       )}
-      {consented && (
+      {consented && closedStatus === null && (
         <div className="mt-6 text-center">
           <Button variant="ghost" size="sm" onClick={withdraw}>{t("kyc.withdraw")}</Button>
         </div>

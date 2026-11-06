@@ -4,16 +4,17 @@ from __future__ import annotations
 from collections import Counter
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from .. import data, store
 from ..common.auth import require_backoffice_key
 from ..common.i18n_server import lt
 from ..common.mask import mask_phone
 from ..contracts import (
-    Channel, FunnelReport, FunnelStage, HandoffRow, KycReviewRow, LeadsPage, ModelCoefficient, ModelReport, OrderRow,
-    Segment,
+    Channel, FunnelReport, FunnelStage, HandoffRow, KycDecisionRequest, KycDecisionResponse, KycReviewRow, LeadsPage,
+    ModelCoefficient, ModelReport, OrderRow, Segment,
 )
+from ..orders import service as order_service
 from .. import leads as lead_queue
 from ..leads.model import get_model
 
@@ -36,11 +37,39 @@ def handoffs() -> list[HandoffRow]:
     return [HandoffRow(**h) for h in store.list_handoffs()]
 
 
+# Only orders still waiting on someone: a decided or retaken order drops off the queue.
+_WAITING = {"MANUAL_REVIEW": "KYC_REVIEW", "ACTION_REQUIRED": "KYC_ACTION_REQUIRED"}
+
+
 @router.get("/kyc-reviews", response_model=list[KycReviewRow])
 def kyc_reviews() -> list[KycReviewRow]:
-    return [KycReviewRow(order_id=k["order_id"], verdict=k["verdict"], created_at=k["created_at"],
-                         failing_checks=[c for c in k["checks"] if c.status != "PASS"])
-            for k in store.list_kyc_results(["MANUAL_REVIEW", "ACTION_REQUIRED"])]
+    out = []
+    for k in store.list_kyc_results(list(_WAITING)):
+        order = store.get_order(k["order_id"])
+        if order is not None and order["status"] != _WAITING[k["verdict"]]:
+            continue
+        out.append(KycReviewRow(order_id=k["order_id"], verdict=k["verdict"], created_at=k["created_at"],
+                                failing_checks=[c for c in k["checks"] if c.status != "PASS"]))
+    return out
+
+
+DECISION_TEXT = {
+    "approve": lt("Our team checked your documents. They're verified.", "हमारी टीम ने आपके दस्तावेज़ जाँच लिए। वे सत्यापित हैं।"),
+    "reject": lt("Our team could not verify your business documents.", "हमारी टीम आपके व्यवसाय के दस्तावेज़ सत्यापित नहीं कर सकी।"),
+}
+
+
+@router.post("/kyc-reviews/{order_id}/decision", response_model=KycDecisionResponse)
+def kyc_decision(order_id: str, req: KycDecisionRequest) -> KycDecisionResponse:
+    """Approve or reject an order whose KYC needs a person. Works in and out of demo mode."""
+    order = store.get_order(order_id)
+    if order is None:
+        raise HTTPException(404, detail={"code": "ORDER_NOT_FOUND", "message": "No order with that ID."})
+    if order["status"] != "KYC_REVIEW":
+        raise HTTPException(409, detail={"code": "NOT_IN_REVIEW", "message": "This order isn't waiting for a KYC review."})
+    target = "KYC_VERIFIED" if req.decision == "approve" else "REJECTED"
+    order_service.transition(order_id, target, DECISION_TEXT[req.decision])
+    return KycDecisionResponse(order_id=order_id, status=target)
 
 
 @router.get("/orders", response_model=list[OrderRow])

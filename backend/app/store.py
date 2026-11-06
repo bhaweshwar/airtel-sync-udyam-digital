@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from .config import settings
@@ -16,10 +16,15 @@ from .contracts import BusinessProfile, Check, ConsentRecord, InstallSlot, Local
 from .db import connect
 
 
+IST = timezone(timedelta(hours=5, minutes=30), "IST")
+
+
 def now() -> datetime:
     """The app clock: the real time of day on settings.today (the case data's reference date, 2026-07-15 by default),
     so event timestamps line up with order dates, slots and the 90-day address-proof rule."""
-    real = datetime.now(timezone.utc)
+    # India time, so the date part stays settings.today for an Indian viewer at any hour (UTC would roll over to
+    # the next day in the browser between 00:00 and 05:30 IST).
+    real = datetime.now(IST)
     return datetime.combine(settings.today, real.timetz())
 
 

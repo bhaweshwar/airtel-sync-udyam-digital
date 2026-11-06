@@ -118,6 +118,74 @@ def test_wrong_pin_is_404_and_rate_limited(client, three_item_quote, bo_headers)
     assert client.get(f"/api/orders/{order_id}/slots", params={"pin": wrong}).status_code == 404
     for _ in range(10):
         client.get(f"/api/orders/{order_id}", params={"pin": wrong})
-    assert client.get(f"/api/orders/{order_id}", params={"pin": pin}).status_code == 404  # locked for a minute
+    locked = client.get(f"/api/orders/{order_id}", params={"pin": pin})  # locked for a minute
+    assert locked.status_code == 429 and locked.json()["detail"]["code"] == "TOO_MANY_TRIES"
     # the back office can still advance it
     assert client.post(f"/api/orders/{order_id}/advance", headers=bo_headers).json()["status"] == "KYC_VERIFIED"
+
+
+# ---------------------------------------------------------------- fixes from live testing
+
+def _save_review(order_id: str, verdict: str) -> None:
+    store.save_kyc_result(order_id, verdict, [Check(code="NAME_CONSISTENT", status="FAIL", message=LocalText(en="Names differ", hi="नाम अलग"))], {})
+    _kyc(order_id, verdict)
+
+
+def test_kyc_cannot_rerun_once_the_order_left_kyc(client, three_item_quote):
+    """A rejected (or verified) order refuses new checks, so the KYC screen can't disagree with the tracker."""
+    from app.data import SAMPLE_APPLICANTS  # noqa: F401  (samples exist in demo mode)
+    for verdict in ("REJECTED", "VERIFIED", "MANUAL_REVIEW"):
+        order_id, _ = _place(client)
+        client.post(f"/api/kyc/{order_id}/consent", json={"version": client.get("/api/kyc/notice").json()["version"],
+                                                          "purposes_accepted": ["kyc_verification"]})
+        _kyc(order_id, verdict)
+        for r in (client.post(f"/api/kyc/{order_id}/submit"), client.post(f"/api/kyc/{order_id}/sample/K03")):
+            assert r.status_code == 409 and r.json()["detail"]["code"] == "KYC_CLOSED", (verdict, r.text)
+    # still open while the owner has photos to retake
+    order_id, _ = _place(client)
+    client.post(f"/api/kyc/{order_id}/consent", json={"version": client.get("/api/kyc/notice").json()["version"],
+                                                      "purposes_accepted": ["kyc_verification"]})
+    _kyc(order_id, "ACTION_REQUIRED", "gst_certificate")
+    assert client.post(f"/api/kyc/{order_id}/submit").status_code == 200
+
+
+def test_done_steps_never_go_back_in_time(client, three_item_quote):
+    order_id, pin = _place(client)
+    _kyc(order_id, "VERIFIED")
+    slot = service.available_slots()[-1]  # a few days after today
+    service.book_slot(order_id, slot)
+    service.advance(order_id)  # installing
+    service.advance(order_id)  # active
+    steps = client.get(f"/api/orders/{order_id}", params={"pin": pin}).json()["timeline"]
+    dates = [s["date"] for s in steps]
+    assert all(s["state"] == "done" for s in steps) and dates == sorted(dates)
+    assert dates[-1] == slot.date.isoformat()  # services live on (not before) the engineer's day
+
+
+def test_app_clock_keeps_todays_date_in_india():
+    now = store.now()
+    assert now.date() == TODAY and now.utcoffset() == timedelta(hours=5, minutes=30)
+
+
+def test_staff_decide_a_manual_review(client, three_item_quote, bo_headers):
+    approve_id, _ = _place(client)
+    reject_id, _ = _place(client)
+    waiting_id, _ = _place(client)
+    for oid in (approve_id, reject_id):
+        _save_review(oid, "MANUAL_REVIEW")
+    _save_review(waiting_id, "ACTION_REQUIRED")
+    queue = {r["order_id"] for r in client.get("/api/backoffice/kyc-reviews", headers=bo_headers).json()}
+    assert {approve_id, reject_id, waiting_id} <= queue
+
+    url = "/api/backoffice/kyc-reviews/{}/decision"
+    assert client.post(url.format(approve_id), json={"decision": "approve"}).status_code == 401
+    assert client.post(url.format(approve_id), json={"decision": "approve"}, headers=bo_headers).json()["status"] == "KYC_VERIFIED"
+    assert client.post(url.format(reject_id), json={"decision": "reject"}, headers=bo_headers).json()["status"] == "REJECTED"
+    # decided orders leave the queue; a second decision or one on an order not in review is refused
+    queue = {r["order_id"] for r in client.get("/api/backoffice/kyc-reviews", headers=bo_headers).json()}
+    assert approve_id not in queue and reject_id not in queue and waiting_id in queue
+    again = client.post(url.format(approve_id), json={"decision": "reject"}, headers=bo_headers)
+    assert again.status_code == 409 and again.json()["detail"]["code"] == "NOT_IN_REVIEW"
+    assert client.post(url.format(waiting_id), json={"decision": "approve"}, headers=bo_headers).status_code == 409
+    assert client.post(url.format("UD-000000-9999"), json={"decision": "approve"}, headers=bo_headers).status_code == 404
+    assert client.post(url.format(approve_id), json={"decision": "maybe"}, headers=bo_headers).status_code == 422

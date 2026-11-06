@@ -76,6 +76,7 @@ QUOTE_ACCEPTED → KYC_PENDING → KYC_ACTION_REQUIRED → (retake re-runs KYC) 
 | `GET /api/backoffice/leads` | `?limit&offset&channel&segment`, header `X-Backoffice-Key` | `LeadsPage` | WS5 |
 | `GET /api/backoffice/handoffs` | header | `HandoffRow[]` | WS5 |
 | `GET /api/backoffice/kyc-reviews` | header | `KycReviewRow[]` | WS5 |
+| `POST /api/backoffice/kyc-reviews/{order_id}/decision` | header | `KycDecisionRequest` → `KycDecisionResponse` (409 `NOT_IN_REVIEW` unless the order is `KYC_REVIEW`) | WS5 |
 | `GET /api/backoffice/orders` | header | `OrderRow[]` | WS5 |
 | `GET /api/backoffice/model` | header | `ModelReport` | WS5 |
 | `GET /api/backoffice/funnel` | header | `FunnelReport` | WS5 |

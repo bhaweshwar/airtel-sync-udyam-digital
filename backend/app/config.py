@@ -58,6 +58,7 @@ class Settings:
     demo_mode: bool
     backoffice_key: str
     fernet_key: str
+    ocr_threads: int  # ONNX Runtime threads for OCR; 0 = one per core
     warm_ocr: bool  # load the OCR models in the background at startup, so the first KYC check isn't slow
     groq_api_key: str
     groq_model: str
@@ -84,6 +85,7 @@ def load_settings() -> Settings:
         demo_mode=_bool("DEMO_MODE", True),
         backoffice_key=os.environ.get("BACKOFFICE_KEY", "accel-demo"),
         fernet_key=_fernet_key(os.environ.get("FERNET_KEY")),
+        ocr_threads=int(os.environ.get("OCR_THREADS", "0") or 0),
         warm_ocr=_bool("WARM_OCR", True),
         groq_api_key=os.environ.get("GROQ_API_KEY", ""),
         groq_model=os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),

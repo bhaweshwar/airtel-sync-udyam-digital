@@ -59,6 +59,7 @@ const dict: FeatureDict = {
     "kyc.field.bill_date": "Bill date",
     "kyc.submit": "Check my documents",
     "kyc.submitting": "Checking your documents…",
+    "kyc.retaking": "Reading your new photo and checking again…",
     "kyc.missing": "{n} of 4 documents added. You can still check now and add the rest later.",
 
     "kyc.sample.title": "Demo: use a sample applicant",
@@ -79,6 +80,10 @@ const dict: FeatureDict = {
     "kyc.check.warn": "Note",
     "kyc.check.fail": "Problem",
     "kyc.track": "Track your order",
+    "kyc.closed.title": "Documents can't be checked again",
+    "kyc.closed.done": "This order's documents are already verified. Track your order for the next step.",
+    "kyc.closed.KYC_REVIEW": "Your documents are with our team for a quick check. Track your order for updates.",
+    "kyc.closed.REJECTED": "This order could not be verified, so its documents can't be checked again. Please call support.",
     "kyc.backToDocs": "Change documents",
 
     "kyc.withdraw": "Withdraw consent",
@@ -142,6 +147,7 @@ const dict: FeatureDict = {
     "kyc.field.bill_date": "बिल की तारीख़",
     "kyc.submit": "मेरे दस्तावेज़ जाँचें",
     "kyc.submitting": "आपके दस्तावेज़ जाँच रहे हैं…",
+    "kyc.retaking": "आपकी नई फ़ोटो पढ़कर दोबारा जाँच रहे हैं…",
     "kyc.missing": "4 में से {n} दस्तावेज़ जुड़े हैं। आप अभी जाँच करवा सकते हैं और बाकी बाद में जोड़ सकते हैं।",
 
     "kyc.sample.title": "डेमो: नमूना आवेदक चुनें",
@@ -162,6 +168,10 @@ const dict: FeatureDict = {
     "kyc.check.warn": "ध्यान दें",
     "kyc.check.fail": "समस्या",
     "kyc.track": "अपना ऑर्डर ट्रैक करें",
+    "kyc.closed.title": "दस्तावेज़ दोबारा नहीं जाँचे जा सकते",
+    "kyc.closed.done": "इस ऑर्डर के दस्तावेज़ पहले ही सत्यापित हो चुके हैं। आगे का कदम देखने के लिए ऑर्डर ट्रैक करें।",
+    "kyc.closed.KYC_REVIEW": "आपके दस्तावेज़ हमारी टीम के पास एक छोटी जाँच के लिए हैं। अपडेट के लिए ऑर्डर ट्रैक करें।",
+    "kyc.closed.REJECTED": "यह ऑर्डर सत्यापित नहीं हो सका, इसलिए इसके दस्तावेज़ दोबारा नहीं जाँचे जा सकते। कृपया सपोर्ट को कॉल करें।",
     "kyc.backToDocs": "दस्तावेज़ बदलें",
 
     "kyc.withdraw": "सहमति वापस लें",

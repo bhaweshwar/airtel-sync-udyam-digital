@@ -1,5 +1,5 @@
 // Order lookup + tracker. WS4 owns this folder.
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "../../api/client";
 import type { InstallSlot, Order, OrderStatus } from "../../api/types";
@@ -24,9 +24,13 @@ function useFormatDate() {
   }, [lang]);
 }
 
+// Errors are kept as the error itself and translated when shown, so switching language re-translates them.
 function errorText(e: unknown, t: (k: string) => string): string {
   if (e instanceof ApiError && e.status === 404) return t("track.lookup.notFound");
-  if (e instanceof ApiError && e.status === 429) return t("track.lookup.tooMany");
+  // Only the server's PIN lock means "too many tries". Any other 429/5xx is the host being busy (for example a
+  // single small instance reading KYC photos), which is temporary.
+  if (e instanceof ApiError && e.code === "TOO_MANY_TRIES") return t("track.lookup.tooMany");
+  if (e instanceof ApiError && (e.status === 429 || e.status >= 500)) return t("track.busy");
   return e instanceof Error ? e.message : t("common.error");
 }
 
@@ -39,7 +43,7 @@ export function TrackLookupPage() {
   const [orderId, setOrderId] = useState(journey.orderId ?? "");
   const [pin, setPin] = useState(journey.pin ?? "");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -51,7 +55,7 @@ export function TrackLookupPage() {
       update({ orderId: id, pin: pin.trim() });
       navigate(`/track/${encodeURIComponent(id)}`);
     } catch (err) {
-      setError(errorText(err, t));
+      setError(err);
     } finally {
       setBusy(false);
     }
@@ -73,7 +77,7 @@ export function TrackLookupPage() {
             <input className={cx(input, "tabular tracking-[0.4em]")} value={pin} inputMode="numeric" pattern="[0-9]{4}" maxLength={4}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} autoComplete="off" required />
           </label>
-          {error && <Banner tone="bad">{error}</Banner>}
+          {error !== null && <Banner tone="bad">{errorText(error, t)}</Banner>}
           <Button type="submit" full disabled={busy || !orderId.trim() || pin.length !== 4}>
             {busy ? <Spinner label={t("common.loading")} /> : t("track.lookup.submit")}
           </Button>
@@ -86,7 +90,7 @@ export function TrackLookupPage() {
 // ---------------------------------------------------------------- /track/:orderId
 
 export function TrackOrderPage() {
-  const { t, lt } = useT();
+  const { t, lt, lang } = useT();
   const fmt = useFormatDate();
   const meta = useMeta();
   const { orderId = "" } = useParams();
@@ -94,7 +98,9 @@ export function TrackOrderPage() {
   const pin = journey.orderId === orderId ? journey.pin : undefined;
 
   const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const orderRef = useRef<Order | null>(null);
+  useEffect(() => { orderRef.current = order; }, [order]);
   const [slots, setSlots] = useState<InstallSlot[]>([]);
   const [picked, setPicked] = useState<InstallSlot | null>(null);
   const [changing, setChanging] = useState(false);
@@ -106,9 +112,12 @@ export function TrackOrderPage() {
       setOrder(await api.getOrder(orderId, pin));
       setError(null);
     } catch (e) {
-      setError(errorText(e, t));
+      // A failed background refresh keeps showing the last good copy and retries on the next tick; only the first
+      // load, a wrong PIN or a lock is worth a banner.
+      const quiet = orderRef.current !== null && !(e instanceof ApiError && (e.status === 404 || e.code === "TOO_MANY_TRIES"));
+      if (!quiet) setError(e);
     }
-  }, [orderId, pin, t]);
+  }, [orderId, pin]);
 
   useEffect(() => {
     load();
@@ -132,7 +141,7 @@ export function TrackOrderPage() {
       setPicked(null);
       setChanging(false);
     } catch (e) {
-      setError(errorText(e, t));
+      setError(e);
     } finally {
       setBusy(false);
     }
@@ -142,7 +151,7 @@ export function TrackOrderPage() {
     return (
       <div>
         <PageTitle title={t("track.title")} subtitle={t("track.order.subtitle", { id: orderId })} />
-        {error ? <Banner tone="bad">{error}</Banner> : <Spinner label={t("common.loading")} />}
+        {error !== null ? <Banner tone="bad">{errorText(error, t)}</Banner> : <Spinner label={t("common.loading")} />}
       </div>
     );
   }
@@ -161,7 +170,7 @@ export function TrackOrderPage() {
         <Pill tone={STATUS_TONE[order.status]}>{statusLabel}</Pill>
         <span className="text-xs text-muted">{t("track.refreshing")}</span>
       </div>
-      {error && <Banner tone="bad">{error}</Banner>}
+      {error !== null && <Banner tone="bad">{errorText(error, t)}</Banner>}
 
       {order.next_action && (
         <Card className={cx(order.status === "KYC_ACTION_REQUIRED" && "border-warn")}>
@@ -220,7 +229,9 @@ export function TrackOrderPage() {
 
       <Card>
         <h2 className="font-semibold">{t("track.eta.title")}</h2>
-        {order.eta_activation_date ? (
+        {order.status === "ACTIVE" ? (
+          <p className="mt-1 text-sm text-muted">{t("track.eta.live")}</p>
+        ) : order.eta_activation_date ? (
           <>
             <p className="mt-1 text-sm text-muted">{t("track.eta.activation", { date: fmt(order.eta_activation_date) })}</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -256,7 +267,7 @@ export function TrackOrderPage() {
         <ol className="space-y-2">
           {[...order.events].reverse().map((ev, i) => (
             <li key={i} className="text-sm">
-              <span className="text-muted tabular">{new Date(ev.ts).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })}</span>
+              <span className="text-muted tabular">{new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short", timeZone: "Asia/Kolkata" }).format(new Date(ev.ts))}</span>
               {" · "}{lt(ev.text)}
             </li>
           ))}

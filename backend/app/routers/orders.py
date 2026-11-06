@@ -21,7 +21,11 @@ def _not_found() -> HTTPException:
 
 
 def _authorised(order_id: str, pin: Optional[str]) -> dict[str, Any]:
-    row = service.authorise(order_id, pin)
+    try:
+        row = service.authorise(order_id, pin)
+    except service.TooManyTries:
+        raise HTTPException(status_code=429, detail={"code": "TOO_MANY_TRIES",
+                                                     "message": "Too many wrong PINs. Wait a minute, then try again."})
     if row is None:
         raise _not_found()
     return row

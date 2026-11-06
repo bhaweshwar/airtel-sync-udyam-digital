@@ -390,6 +390,16 @@ class KycReviewRow(BaseModel):
     created_at: datetime
 
 
+class KycDecisionRequest(BaseModel):
+    """A staff decision on an order whose KYC needs a person (status KYC_REVIEW)."""
+    decision: Literal["approve", "reject"]
+
+
+class KycDecisionResponse(BaseModel):
+    order_id: str
+    status: OrderStatus
+
+
 class OrderRow(BaseModel):
     order_id: str
     status: OrderStatus

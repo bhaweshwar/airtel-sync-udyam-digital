@@ -16,13 +16,13 @@ export function slotTone(slot: Slot): "neutral" | "info" | "ok" | "bad" {
 }
 
 /** A camera / file picker button. `capture` opens the back camera on phones. */
-export function PhotoButton({ label, onFile, variant = "secondary" }: { label: string; onFile: (f: File) => void; variant?: "primary" | "secondary" }) {
+export function PhotoButton({ label, onFile, variant = "secondary", disabled = false }: { label: string; onFile: (f: File) => void; variant?: "primary" | "secondary"; disabled?: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   return (
     <>
       <input ref={input} type="file" accept="image/*" capture="environment" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
-      <Button size="sm" variant={variant} onClick={() => input.current?.click()}>{label}</Button>
+      <Button size="sm" variant={variant} disabled={disabled} onClick={() => input.current?.click()}>{label}</Button>
     </>
   );
 }

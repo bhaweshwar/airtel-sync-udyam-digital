@@ -4,7 +4,7 @@
 import type {
   AdvisorMessageRequest, AdvisorReply, BookSlotRequest, ConsentNotice, ConsentRecord, ConsentRequest,
   CreateOrderRequest, CreateOrderResponse, DocType, DocumentResult, FunnelReport, GstinLookup, HandoffRequest,
-  HandoffResponse, HandoffRow, KycResult, KycReviewRow, LeadsPage, LeadsQuery, LlmStatus, Meta, ModelReport, Order,
+  HandoffResponse, HandoffRow, KycDecision, KycDecisionResponse, KycResult, KycReviewRow, LeadsPage, LeadsQuery, LlmStatus, Meta, ModelReport, Order,
   OrderRow, Product, Quote, QuoteRequest, RecommendRequest, SlotsResponse, UdyamLookup, BusinessProfile,
 } from "./types";
 
@@ -33,10 +33,12 @@ export const MOCK = import.meta.env.VITE_MOCK === "1";
 export class ApiError extends Error {
   status: number;
   code: string;
-  constructor(status: number, code: string, message: string) {
+  detail: Record<string, unknown>;
+  constructor(status: number, code: string, message: string, detail: Record<string, unknown> = {}) {
     super(message);
     this.status = status;
     this.code = code;
+    this.detail = detail;
   }
 }
 
@@ -62,7 +64,7 @@ async function request<T>(method: string, path: string, opts: { body?: Json | Fo
   const data = await res.json().catch(() => null);
   if (!res.ok) {
     const detail = data?.detail;
-    if (detail && typeof detail === "object" && "code" in detail) throw new ApiError(res.status, detail.code, detail.message);
+    if (detail && typeof detail === "object" && "code" in detail) throw new ApiError(res.status, detail.code, detail.message, detail);
     throw new ApiError(res.status, "HTTP_" + res.status, typeof detail === "string" ? detail : "Something went wrong. Please try again.");
   }
   return data as T;
@@ -143,6 +145,9 @@ export const api = {
       MOCK ? mock(fxLeads) : request("GET", "/api/backoffice/leads", { headers: bo(key), query: { ...q } }),
     handoffs: (key: string): Promise<HandoffRow[]> => (MOCK ? mockList(fxHandoffRows) : request("GET", "/api/backoffice/handoffs", { headers: bo(key) })),
     kycReviews: (key: string): Promise<KycReviewRow[]> => (MOCK ? mockList(fxKycReviews) : request("GET", "/api/backoffice/kyc-reviews", { headers: bo(key) })),
+    kycDecision: (key: string, orderId: string, decision: KycDecision): Promise<KycDecisionResponse> =>
+      MOCK ? mock({ order_id: orderId, status: decision === "approve" ? "KYC_VERIFIED" : "REJECTED" } as KycDecisionResponse)
+        : request("POST", `/api/backoffice/kyc-reviews/${encodeURIComponent(orderId)}/decision`, { headers: bo(key), body: { decision } }),
     orders: (key: string): Promise<OrderRow[]> => (MOCK ? mockList(fxOrderRows) : request("GET", "/api/backoffice/orders", { headers: bo(key) })),
     model: (key: string): Promise<ModelReport> => (MOCK ? mock(fxModel) : request("GET", "/api/backoffice/model", { headers: bo(key) })),
     funnel: (key: string): Promise<FunnelReport> => (MOCK ? mock(fxFunnel) : request("GET", "/api/backoffice/funnel", { headers: bo(key) })),

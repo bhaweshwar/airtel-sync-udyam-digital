@@ -1,6 +1,6 @@
 // Quote + checkout. WS1 owns this folder.
 // The quote lives in useJourney(); every change is re-priced by the server (POST /api/quote) and replaces it.
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../../api/client";
 import type { LineItem, Quote, SelectedItem } from "../../api/types";
@@ -212,6 +212,15 @@ function Checkout({ quote, onCancel, onPlaced }: { quote: Quote; onCancel: () =>
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  // The form opens at the bottom of a long quote: bring it into view and put the cursor in the first field,
+  // otherwise "Confirm order" looks like it did nothing on a phone.
+  useEffect(() => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    nameRef.current?.focus({ preventScroll: true });
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -235,11 +244,11 @@ function Checkout({ quote, onCancel, onPlaced }: { quote: Quote; onCancel: () =>
   const input = "mt-1 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-base focus:border-brand-600 focus:outline-none";
   return (
     <Card>
-      <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
+      <form ref={formRef} onSubmit={submit} className="flex scroll-mt-20 flex-col gap-3" noValidate>
         <p className="text-lg font-bold">{t("quote.form.title")}</p>
         <label className="text-sm font-semibold">
           {t("quote.form.name")}
-          <input className={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} />
+          <input ref={nameRef} className={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} />
         </label>
         <label className="text-sm font-semibold">
           {t("quote.form.phone")}

@@ -19,6 +19,8 @@ from typing import Any
 import cv2
 import numpy as np
 
+from ..config import settings
+
 # Calibrated on data/kyc_documents: K04's GST certificate scores ~1, every other specimen scores > 800.
 BLUR_THRESHOLD = 100.0
 MAX_SIDE = 1800        # phone photos are scaled down to this before OCR
@@ -69,7 +71,10 @@ def _get_engine() -> Any:
     global _engine
     if _engine is None:
         from rapidocr_onnxruntime import RapidOCR  # imported lazily: loading the models takes a second
-        _engine = RapidOCR()
+        # OCR_THREADS caps ONNX Runtime's threads (0 = one per core). On a small host, 1 leaves a core free for the
+        # web requests that arrive while a KYC check is running.
+        threads = settings.ocr_threads
+        _engine = RapidOCR(**({"intra_op_num_threads": threads, "inter_op_num_threads": 1} if threads else {}))
     return _engine
 
 

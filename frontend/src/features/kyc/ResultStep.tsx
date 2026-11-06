@@ -25,6 +25,8 @@ export function ResultStep({ result, orderId, onRetake, onBack, busy }: {
   return (
     <div className="space-y-4">
       <Banner tone={VERDICT_TONE[result.verdict]} title={t(`kyc.verdict.${result.verdict}`)}>{t(`kyc.verdict.${result.verdict}.body`)}</Banner>
+      {/* Right under the verdict, so it is in view on a phone while a retake is checked. */}
+      {busy && <div><Spinner label={busy} /></div>}
       {result.gst_products_blocked && <Banner tone="bad">{t("kyc.gstBlocked")}</Banner>}
       {result.verdict === "VERIFIED" && (
         <Link to={`/track/${orderId}`} className="block"><Button full size="lg">{t("kyc.track")}</Button></Link>
@@ -39,7 +41,7 @@ export function ResultStep({ result, orderId, onRetake, onBack, busy }: {
                 {c.status !== "PASS" && c.fix_hint && <p className="mt-0.5 text-sm text-muted">{lt(c.fix_hint)}</p>}
                 {c.status === "FAIL" && c.doc_type && FIXABLE.has(c.code) && result.verdict === "ACTION_REQUIRED" && (
                   <div className="mt-2">
-                    <PhotoButton label={`${t("kyc.slot.retake")}: ${t(`kyc.doc.${c.doc_type}`)}`} onFile={(f) => onRetake(c.doc_type as DocType, f)} />
+                    <PhotoButton label={`${t("kyc.slot.retake")}: ${t(`kyc.doc.${c.doc_type}`)}`} onFile={(f) => onRetake(c.doc_type as DocType, f)} disabled={!!busy} />
                   </div>
                 )}
               </div>
@@ -47,8 +49,7 @@ export function ResultStep({ result, orderId, onRetake, onBack, busy }: {
           ))}
         </ul>
       </Card>
-      {busy && <Spinner label={busy} />}
-      {result.verdict !== "VERIFIED" && <Button variant="ghost" onClick={onBack}>{t("kyc.backToDocs")}</Button>}
+      {result.verdict !== "VERIFIED" && <Button variant="ghost" disabled={!!busy} onClick={onBack}>{t("kyc.backToDocs")}</Button>}
     </div>
   );
 }
