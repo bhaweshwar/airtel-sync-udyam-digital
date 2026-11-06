@@ -22,16 +22,22 @@ Return one JSON object with exactly these keys:
 - business_type: short English name of the business, e.g. "kirana store", "dental clinic", "restaurant chain", or null
 - city: the city or town name in English, or null
 - city_size: "metro", "big_city" or "small_town" if the owner describes the place that way, else null
-- employees: integer number of people working there, or null
-- sites: integer number of shops/branches/locations, or null
+- employees: integer number of people working there (at least 1), or null; use null for 0 or impossible numbers
+- sites: integer number of shops/branches/locations (at least 1), or null; "my shop" means 1
 - has_gstin: true if they have GST registration, false if they say they don't, else null
-- current_internet: one of {list(INTERNET_CODES)} or null
-- needs_add: list of needs they want, from {list(NEED_CODES)}
+- current_internet: one of {list(INTERNET_CODES)} or null. "mixed" = a different provider or connection at each
+  site ("har outlet pe alag ISP"); "business_broadband" = an office/business broadband or a local ISP;
+  "mobile_hotspot" = phone hotspot, Jio/mobile data or a dongle
+- needs_add: list of needs they want, from {list(NEED_CODES)}. "backup" alone means "cloud_backup" (data);
+  use "backup" only for a backup internet link (when the line goes down)
 - needs_remove: list of needs they no longer want, same values
 - budget_monthly_inr: integer monthly budget in rupees if stated, else null
 - wants_cheaper: true if they ask for a lower price
 - intent: one of {list(INTENTS)} ("handoff" = wants to talk to a person; "accept" = happy with the plan;
-  "change" = wants to change the plan; "ask_why" = asks why something was suggested)
+  "change" = wants to change the plan; "ask_why" = asks why something was suggested;
+  "ask_price" = asks what something costs without asking to add it)
+- unsupported_requests: short English names of things they ask for that are not internet, phone, cloud,
+  security, CCTV or IoT services (e.g. "DTH TV connection", "loan"), else []
 - language: "hi" if they wrote in Hindi or Hinglish, "en" if English
 Do not invent values. Do not recommend products. Output JSON only."""
 
@@ -51,6 +57,14 @@ class _LlmOut(BaseModel):
     wants_cheaper: Optional[bool] = None
     intent: Optional[str] = None
     language: Optional[str] = None
+    unsupported_requests: list[str] = []
+
+    @field_validator("unsupported_requests", mode="before")
+    @classmethod
+    def _unsupported(cls, v: Any) -> list[str]:
+        if not isinstance(v, list):
+            return []
+        return [x.strip() for x in v if isinstance(x, str) and 0 < len(x.strip()) <= 40][:3]
 
     @field_validator("needs_add", "needs_remove", mode="before")
     @classmethod
@@ -119,7 +133,7 @@ def from_llm(raw: dict[str, Any]) -> Optional[Extraction]:
         city_size=o.city_size, employees=o.employees, sites=o.sites, has_gstin=o.has_gstin,
         current_internet=o.current_internet, needs_add=o.needs_add, needs_remove=o.needs_remove,
         budget_monthly_inr=o.budget_monthly_inr, cheaper=bool(o.wants_cheaper), intent=o.intent or "other",
-        language=o.language,
+        language=o.language, unsupported=o.unsupported_requests,
     )
     if o.business_type:
         btype, seg = rules_parser.canonical_business(o.business_type)
@@ -134,12 +148,20 @@ def from_llm(raw: dict[str, Any]) -> Optional[Extraction]:
     return ex
 
 
+def _sold_here(item: str) -> bool:
+    parsed = rules_parser.parse(item)
+    return bool(parsed.needs_add or parsed.products_asked)
+
+
 def _merge(primary: Extraction, rules: Extraction) -> Extraction:
     """LLM first; rules fill the gaps. Deterministic-only signals (GSTIN, product names, hand-off) always come from rules."""
     for name in ("business_type", "segment", "city", "city_tier", "state", "unknown_city", "city_size", "employees",
                  "sites", "has_gstin", "current_internet", "budget_monthly_inr", "language"):
         if getattr(primary, name) is None and getattr(rules, name) is not None:
             setattr(primary, name, getattr(rules, name))
+    # The rules only match a business name the owner actually wrote ("CA firm"), so they beat the model's paraphrase.
+    if rules.business_type:
+        primary.business_type, primary.segment = rules.business_type, rules.segment
     if primary.city:
         primary.unknown_city = None
     primary.gstin = rules.gstin
@@ -149,10 +171,18 @@ def _merge(primary: Extraction, rules: Extraction) -> Extraction:
     primary.needs_remove = list(dict.fromkeys(primary.needs_remove + rules.needs_remove))
     primary.products_asked, primary.products_removed = rules.products_asked, rules.products_removed
     primary.cheaper = primary.cheaper or rules.cheaper
-    if rules.intent == "handoff":
-        primary.intent = "handoff"
+    primary.bad_number = rules.bad_number
+    # One entry per unsupported thing: the rules' fixed label wins over the model's wording for the same request.
+    # Drop model "unsupported" items that are really something we sell ("card swipe machine" is POS billing).
+    llm_extra = [u for u in primary.unsupported
+                 if not any(w in u.lower() for r in rules.unsupported for w in r.lower().split(" / ")) and not _sold_here(u)]
+    primary.unsupported = list(dict.fromkeys(rules.unsupported + llm_extra))[:3]
+    if rules.intent in ("handoff", "ask_price"):
+        primary.intent = rules.intent
     elif primary.intent == "other" and rules.intent != "other":
         primary.intent = rules.intent
+    if primary.intent == "ask_price" and primary.cheaper:
+        primary.intent = "change"
     return primary
 
 
@@ -178,6 +208,53 @@ def extract(text: str, pending: Optional[str], context: dict[str, Any]) -> tuple
 REPHRASE_SYSTEM = """You rewrite one short sentence from a telecom advisor to a small-business owner so it sounds
 warm and natural in the requested language (English, or Hindi in Devanagari). Keep the meaning. Never add numbers,
 digits, prices, rupee signs or product codes. Return JSON {"text": "..."}."""
+
+
+LANGUAGE_NAMES = {"hinglish": "Hinglish (Hindi written in English letters, like 'aapka plan taiyaar hai')",
+                  "ta": "Tamil", "te": "Telugu", "kn": "Kannada", "ml": "Malayalam", "bn": "Bengali", "gu": "Gujarati",
+                  "pa": "Punjabi (Gurmukhi script)", "or": "Odia"}
+
+LOCALIZE_SYSTEM = """You translate a telecom advisor's reply to a small-business owner into the requested language.
+Keep the meaning and the line breaks and bullet points. Keep every number, rupee amount, date and product name
+(like "Biz Fibre 300" or "Cloud CCTV") exactly as written, in English digits. Do not add anything.
+Return JSON {"text": "..."}."""
+
+_NUMBER_TOKENS = re.compile(r"\d[\d,.]*")
+
+
+def localize(text: str, target: str) -> Optional[str]:
+    """Translate a finished reply into an Indian language the templates don't cover. The result is used only if it
+    keeps exactly the same numbers as the original (so prices and counts can't drift); otherwise None."""
+    if target not in LANGUAGE_NAMES or not llm.any_configured():
+        return None
+    payload = json.dumps({"language": LANGUAGE_NAMES[target], "reply": text}, ensure_ascii=False)
+    for _attempt in range(2):  # one retry: a model sometimes slips in a stray word from another script
+        raw, _ = llm.complete_json(LOCALIZE_SYSTEM, payload)
+        out = raw.get("text") if isinstance(raw, dict) else None
+        if raw is None:
+            return None  # provider down or rate-limited: don't spend another call
+        if _translation_ok(text, out, target):
+            return out.strip()  # type: ignore[union-attr]
+    return None
+
+
+def _translation_ok(source: str, out: object, target: str) -> bool:
+    if not isinstance(out, str) or not out.strip() or len(out) > 4 * len(source) + 200:
+        return False
+    if sorted(_NUMBER_TOKENS.findall(out)) != sorted(_NUMBER_TOKENS.findall(source)):
+        return False
+    if re.search(r"\bP\d\d\b", out) and not re.search(r"\bP\d\d\b", source):
+        return False
+    return not _foreign_letters(out, target)
+
+
+_SCRIPT_BLOCKS = {"ta": "஀-௿", "te": "ఀ-౿", "kn": "ಀ-೿", "ml": "ഀ-ൿ", "bn": "ঀ-৿", "gu": "઀-૿", "pa": "਀-੿", "or": "଀-୿"}
+
+
+def _foreign_letters(text: str, target: str) -> bool:
+    """True if the translation has letters from a script other than Latin and the target's own (e.g. stray Chinese)."""
+    own = _SCRIPT_BLOCKS.get(target, "")
+    return bool(re.search(rf"[^\x00-ɏ -⁯₹•{own}\s]", text))
 
 
 def rephrase(template: str, language: str) -> Optional[str]:

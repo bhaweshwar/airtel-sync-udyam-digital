@@ -13,7 +13,7 @@ from typing import Optional
 from .. import data
 from ..common import gstin as gst
 
-INTENTS = ("answer", "accept", "change", "ask_why", "handoff", "other")
+INTENTS = ("answer", "accept", "change", "ask_why", "ask_price", "handoff", "other")
 NEED_CODES = (
     "internet", "backup", "payments_pos", "whatsapp", "sms", "email", "cloud_backup", "website",
     "security", "wifi", "cctv", "telephony", "tollfree", "iot", "fleet", "static_ip", "sdwan",
@@ -44,14 +44,17 @@ class Extraction:
     cheaper: bool = False
     intent: str = "other"
     language: Optional[str] = None
+    bad_number: bool = False                                   # a staff/site count of 0 or less was given
+    unsupported: list[str] = field(default_factory=list)       # things asked for that Accel Business doesn't sell
 
     def understood(self) -> bool:
         """True if the message gave us anything we can use."""
         return any([
             self.business_type, self.city, self.unknown_city, self.city_size, self.employees, self.sites,
             self.has_gstin is not None, self.gstin, self.current_internet, self.needs_add, self.needs_remove,
-            self.products_asked, self.products_removed, self.budget_monthly_inr, self.cheaper,
-        ]) or self.intent in ("accept", "ask_why", "handoff", "change")
+            self.products_asked, self.products_removed, self.budget_monthly_inr, self.cheaper, self.bad_number,
+            self.unsupported,
+        ]) or self.intent in ("accept", "ask_why", "ask_price", "handoff", "change")
 
 
 # ---------------------------------------------------------------- numbers
@@ -233,13 +236,23 @@ _GENERIC_PATTERNS: list[tuple[str, str, str]] = [
 _MICRO_TYPES_WITHOUT_ROW = {"restaurant": "micro", "gym": "micro"}
 
 
+_ACRONYMS = {"ca": "CA", "it": "IT", "bpo": "BPO", "gst": "GST", "ngo": "NGO"}
+
+
+def _display_name(name: str) -> str:
+    """'ca firm' -> 'CA firm', 'dental clinic' -> 'Dental clinic'."""
+    words = [_ACRONYMS.get(w, w) for w in name.split(" ")]
+    out = " ".join(words)
+    return out[:1].upper() + out[1:]
+
+
 def canonical_business(text: str) -> tuple[Optional[str], Optional[str]]:
     """Free text -> (business type, segment). Works on owner messages and on an LLM's business_type string."""
     t = text.lower()
     segments = data.business_type_segments()
     if t.strip() in segments:
         name = t.strip()
-        return name[:1].upper() + name[1:], segments[name]
+        return _display_name(name), segments[name]
     for pattern, name in _BUSINESS_PATTERNS:
         if re.search(pattern, t):
             seg = segments.get(name.lower()) or _MICRO_TYPES_WITHOUT_ROW.get(name.lower(), "micro")
@@ -254,7 +267,8 @@ def canonical_business(text: str) -> tuple[Optional[str], Optional[str]]:
 
 _NEED_PATTERNS: list[tuple[str, str]] = [
     (r"cctv|camera|surveillance|सीसीटीवी|कैमरा|कैमरे|security cam", "cctv"),
-    (r"billing|\bpos\b|\bupi\b|card payment|card machine|payments?\b|invoic|बिलिंग|बिल बनाने|पेमेंट|भुगतान", "payments_pos"),
+    (r"billing|\bpos\b|\bupi\b|card payment|card (?:swipe )?machine|swipe machine|card swip|payments?\b|invoic|"
+     r"बिलिंग|बिल बनाने|पेमेंट|भुगतान|कार्ड मशीन", "payments_pos"),
     (r"whats ?app|व्हाट्सऐप|व्हाट्सएप|वॉट्सऐप|वॉट्सएप|व्हाट्सअप", "whatsapp"),
     (r"e-?mails?\b|\bmail id|ईमेल|ई-मेल", "email"),
     (r"failover|backup (?:internet|line|link|connection|sim)|internet backup|4g backup|5g backup|second line|"
@@ -342,8 +356,15 @@ def _current_internet(text_lower: str, pending: Optional[str]) -> Optional[str]:
         return "mobile_hotspot"
     if re.search(r"home (?:broadband|wifi|wi-fi|connection|internet)|ghar ka|घर का|घर वाला", t):
         return "home_broadband"
-    if re.search(r"different (?:per|in each|at each) (?:site|branch)|mixed|har (?:jagah|branch) alag|अलग-अलग", t):
+    if re.search(r"different (?:per|in each|at each) (?:site|branch|outlet|shop|store)|mixed|"
+                 r"different (?:isps?|internet|providers?|broadband|connections?)|"
+                 r"(?:alag|अलग)[ -]?(?:alag |अलग )?(?:isps?|internet|broadband|connection|provider|net\b|इंटरनेट|ब्रॉडबैंड|कनेक्शन)|"
+                 r"har (?:jagah|branch|outlet|dukaan|dukan|shop|store|site)\s*(?:pe|par|mein|me|ka|ki|का|की|पर|में)?\s*alag|"
+                 r"each (?:outlet|branch|site|shop|store|location) (?:has|uses|is on) (?:a |its own )?(?:different|separate|own)|"
+                 r"separate (?:isps?|internet|connections?) (?:at|for|in) each|अलग-अलग", t):
         return "mixed"
+    if re.search(r"local isp|local (?:cable|broadband|internet)(?: wala| provider)?|isp (?:se|ka|wala)", t):
+        return "business_broadband"
     if pending == "current_internet":
         if re.fullmatch(r"\s*(?:none|nothing|no|nahi|nahin|kuch nahi|कुछ नहीं|नहीं)\s*", t):
             return "none"
@@ -415,6 +436,34 @@ def _intent(text_lower: str) -> Optional[str]:
     return None
 
 
+_PRICE_QUESTION = (r"how much|what(?:'s| is| are) the (?:price|cost|rate|charges?)|price of|cost of|\bprice\b|\bcost\b|"
+                   r"\brate\b|charges?\b|per month\?|kitna|kitne ka|kitne ki|kya rate|कितना|कितने|कीमत|दाम|शुल्क|चार्ज")
+
+# Things owners ask for that Accel Business doesn't sell; the advisor says so instead of ignoring them.
+_UNSUPPORTED: list[tuple[str, str]] = [
+    (r"\bdth\b|\btv connection|television|set[- ]?top|dish tv|tata ?play|cable tv|डीटीएच|टीवी कनेक्शन", "DTH / TV connection"),
+    (r"\bloans?\b|credit line|लोन|कर्ज़", "business loans"),
+    (r"\belectricity\b|solar panel|बिजली कनेक्शन", "electricity or solar"),
+]
+
+_OTHER_SCRIPTS = [  # Unicode block -> language code for the reply
+    ("[஀-௿]", "ta"), ("[ఀ-౿]", "te"), ("[ಀ-೿]", "kn"), ("[ഀ-ൿ]", "ml"),
+    ("[ঀ-৿]", "bn"), ("[઀-૿]", "gu"), ("[਀-੿]", "pa"), ("[଀-୿]", "or"),
+]
+
+
+def reply_language(text: str) -> Optional[str]:
+    """The language to answer in, following how the owner writes: 'en', 'hi' (Devanagari), 'hinglish' (Hindi in
+    English letters), or another Indian language code for its own script. None when the message is too short to tell."""
+    for pattern, code in _OTHER_SCRIPTS:
+        if re.search(pattern, text):
+            return code
+    lang = detect_language(text)
+    if lang == "hi" and not re.search(r"[ऀ-ॿ]", _GSTIN_RE.sub(" ", text)):
+        return "hinglish"
+    return lang
+
+
 _HINGLISH = re.compile(r"\b(?:hai|hain|nahi|nahin|mera|meri|mere|mujhe|hum|humare|hamara|kitne|kitna|log|dukaan|dukan|"
                        r"chahiye|chaiye|karna|karni|baat|kya|aur|bhi|wala|wali|mein|haan|teen|paanch|sirf|bas|abhi|"
                        r"insaan|kisi|lekin|thoda|sasta)\b")
@@ -455,10 +504,19 @@ def parse(text: str, pending: Optional[str] = None) -> Extraction:
 
     out.employees = _count_before(no_money, _EMPLOYEE_NOUNS)
     out.sites = _count_before(no_money, _SITE_NOUNS)
+    for name in ("employees", "sites"):  # "0 employees" is not a usable answer: ask again instead
+        if getattr(out, name) is not None and getattr(out, name) < 1:
+            setattr(out, name, None)
+            out.bad_number = True
     if out.sites is None and re.search(r"single (?:site|shop|location|branch|outlet|office)|"
                                        r"(?:one|1) (?:shop|location|branch|outlet|office|clinic|site|store|factory|unit|place)\b|"
                                        r"only one (?:site|shop|place)|ek hi (?:jagah|dukaan|dukan|branch)|एक ही (?:जगह|दुकान)",
                                        no_money):
+        out.sites = 1
+    # "my kirana shop" / "meri dukaan" (singular) is one site.
+    if out.sites is None and re.search(r"\b(?:my|our|mera|meri|mere|hamari|humari|hamara)\s+(?:[a-z]+\s+)?"
+                                       r"(?:shop|store|dukaan|dukan|clinic|salon|pharmacy|office|boutique|bakery)\b(?!s)|"
+                                       r"(?:मेरी|मेरा|हमारी|हमारा)\s+(?:\S+\s+)?(?:दुकान|क्लिनिक|ऑफ़िस|सैलून)(?!ें)", no_money):
         out.sites = 1
     if pending in ("employees", "sites") and out.employees is None and out.sites is None:
         n = _bare_number(no_money)
@@ -501,8 +559,14 @@ def parse(text: str, pending: Optional[str] = None) -> Extraction:
     out.cheaper = bool(re.search(r"cheaper|cheap|lower (?:the )?price|too (?:costly|expensive)|reduce|sasta|sasti|kam (?:karo|kijiye)|"
                                  r"सस्ता|सस्ती|कम करो|कम कीजिए|महँगा|महंगा|mehenga|mehnga", lower))
 
+    out.unsupported = [label for pattern, label in _UNSUPPORTED if re.search(pattern, lower)]
+
     intent = _intent(lower)
-    if intent:
+    if intent == "handoff":
+        out.intent = intent
+    elif not out.cheaper and re.search(_PRICE_QUESTION, lower) and (out.products_asked or out.needs_add):
+        out.intent = "ask_price"  # "how much is WhatsApp API?" is a question, not an order
+    elif intent:
         out.intent = intent
     elif out.needs_remove or out.products_removed or out.cheaper or out.budget_monthly_inr:
         out.intent = "change"

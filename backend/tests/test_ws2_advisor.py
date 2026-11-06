@@ -89,3 +89,108 @@ def test_gstin_is_masked_and_cancelled_explained(client):
     assert r["profile"]["gstin_status"] == "Cancelled"
     assert "37IHKXV5167L1ZS" not in r["profile"]["gstin"]
     assert "cancelled" in r["reply_text"].lower()
+
+
+# ---------------------------------------------------------------- fixes from live LLM testing
+
+def _chat(client, *texts, language="en"):
+    sid, r = None, None
+    for t in texts:
+        r = client.post("/api/advisor/message", json={"session_id": sid, "text": t, "language": language})
+        assert r.status_code == 200, r.text
+        r = r.json()
+        sid = r["session_id"]
+    return r
+
+
+def test_zero_employees_asks_again_instead_of_crashing(client):
+    r = _chat(client, "Coaching centre in Jaipur with 0 employees and 500 branches, GST yes, leased line")
+    assert r["stage"] == "asking" and "doesn't look right" in r["reply_text"]
+    assert r["profile"]["employees"] is None
+
+
+@pytest.mark.parametrize("text", ["abhi har outlet pe alag ISP hai", "different ISP at each outlet",
+                                  "alag alag broadband hai har jagah", "Different at each site"])
+def test_mixed_internet_is_understood(text):
+    assert parse(text, "current_internet").current_internet == "mixed"
+
+
+def test_internet_question_is_not_asked_three_times(client):
+    r = _chat(client, "Restaurant in Bengaluru, 4 outlets, 35 staff, GST yes", "hmm", "CCTV and billing please")
+    assert r["profile"]["current_internet"] == "mixed"
+    assert "own connection" in r["reply_text"]
+
+
+def test_price_question_answers_and_does_not_change_plan(client):
+    base = ["Pharmacy in Pune, 4 staff, one shop, no GST, using mobile hotspot, need internet, billing and CCTV"]
+    before = _chat(client, *base)["quote"]["items"]
+    r = _chat(client, *base, "How much does Cloud CCTV cost per month?")
+    assert "₹" in r["reply_text"] and "I've updated your plan" not in r["reply_text"]
+    assert [i["product_id"] for i in r["quote"]["items"]] == [i["product_id"] for i in before]
+
+
+def test_removing_something_not_in_plan_says_so(client):
+    r = _chat(client, "Pharmacy in Pune, 4 staff, one shop, no GST, using mobile hotspot, need internet and billing",
+              "Remove the CCTV please")
+    assert "isn't in your plan" in r["reply_text"]
+
+
+def test_removal_names_what_changed(client):
+    r = _chat(client, "Pharmacy in Pune, 4 staff, one shop, no GST, using mobile hotspot, need internet, billing and CCTV",
+              "Remove the CCTV please")
+    assert "Removed: Cloud CCTV" in r["reply_text"]
+
+
+def test_cheaper_keeps_what_the_owner_asked_for(client):
+    r = _chat(client, "Pharmacy in Pune, 4 staff, one shop, no GST, using mobile hotspot, need internet, billing and CCTV",
+              "Make it cheaper")
+    ids = {i["product_id"] for i in r["quote"]["items"]}
+    assert {"P19", "P23"} <= ids
+
+
+def test_unsupported_products_are_named():
+    assert parse("Do you also give DTH TV connection?").unsupported == ["DTH / TV connection"]
+
+
+def test_acronyms_and_single_shop():
+    assert parse("We are a CA firm in Pune").business_type == "CA firm"
+    assert parse("meri kirana dukaan hai").sites == 1
+    assert parse("my kirana shop in Lucknow").sites == 1
+    assert parse("my shops in Lucknow").sites is None
+
+
+def test_reply_language_follows_script():
+    from app.advisor.rules_parser import reply_language
+    assert reply_language("நான் சென்னையில் ஒரு மருந்தகம் நடத்துகிறேன்") == "ta"
+    assert reply_language("mera restaurant hai aur 4 outlets hain") == "hinglish"
+    assert reply_language("मेरी दुकान है") == "hi"
+    assert reply_language("I run a clinic in Kochi") == "en"
+
+
+def test_localize_rejects_changed_numbers(monkeypatch):
+    monkeypatch.setattr(llm, "any_configured", lambda: True)
+    monkeypatch.setattr(llm, "complete_json", lambda s, u: ({"text": "உங்கள் திட்டம் ₹9,999"}, "groq"))
+    assert extract.localize("Your plan is ₹2,097 a month", "ta") is None
+    monkeypatch.setattr(llm, "complete_json", lambda s, u: ({"text": "உங்கள் திட்டம் மாதம் ₹2,097"}, "groq"))
+    assert extract.localize("Your plan is ₹2,097 a month", "ta") == "உங்கள் திட்டம் மாதம் ₹2,097"
+
+
+def test_localize_rejects_stray_scripts(monkeypatch):
+    monkeypatch.setattr(llm, "any_configured", lambda: True)
+    monkeypatch.setattr(llm, "complete_json", lambda s, u: ({"text": "சென்னை里的 ஒரு மருந்தகம்"}, "groq"))
+    assert extract.localize("A pharmacy in Chennai, got it.", "ta") is None
+
+
+def test_card_swipe_is_billing_not_unsupported():
+    ex = parse("Do you give a card swipe machine?")
+    assert "payments_pos" in ex.needs_add and ex.unsupported == []
+    llm_ex = extract.from_llm({"business_type": "office", "unsupported_requests": ["card swipe machine", "DTH TV"]})
+    merged = extract._merge(llm_ex, parse("CA firm, we want DTH and a card swipe machine"))
+    assert merged.business_type == "CA firm"
+    assert merged.unsupported == ["DTH / TV connection"]
+
+
+def test_price_of_blocked_product_includes_price(client):
+    r = _chat(client, "Pharmacy in Pune, 4 staff, one shop, no GST, using mobile hotspot, need internet and billing",
+              "How much does WhatsApp Business API cost per month?")
+    assert "₹" in r["reply_text"] and "GSTIN" in r["reply_text"]

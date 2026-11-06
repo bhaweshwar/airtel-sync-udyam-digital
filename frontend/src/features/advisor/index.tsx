@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../../api/client";
 import type { AdvisorReply, Quote } from "../../api/types";
-import { useT } from "../../i18n";
+import { useLang, useT } from "../../i18n";
 import { useJourney } from "../../state/journey";
 import { Banner, Button, Card, Chip, Money, PageTitle, Pill, cx } from "../../ui";
 import { listen, speak, speechSupported, stopSpeaking, ttsSupported, type Recognition } from "./speech";
@@ -58,6 +58,7 @@ function QuotePreview({ quote, onOpen }: { quote: Quote; onOpen: () => void }) {
 
 export function AdvisorPage() {
   const { t, lang } = useT();
+  const { setLang } = useLang();
   const navigate = useNavigate();
   const { journey, update } = useJourney();
   const greeting = (): ChatState => ({
@@ -96,6 +97,8 @@ export function AdvisorPage() {
       const reply = await api.advisorMessage({ session_id: sessionId ?? null, text: clean, language: lang });
       setChat((c) => ({ bubbles: [...c.bubbles, { from: "bot", text: reply.reply_text }], quick: reply.quick_replies, last: reply }));
       update({ advisorSessionId: reply.session_id, profile: reply.profile, ...(reply.quote ? { quote: reply.quote } : {}) });
+      // Follow the owner: if they write in Hindi, the whole screen (plan card, buttons) switches to Hindi, and back.
+      if (reply.profile.language !== lang) setLang(reply.profile.language);
       if (speaker) speak(reply.reply_text, reply.profile.language);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t("common.error"));

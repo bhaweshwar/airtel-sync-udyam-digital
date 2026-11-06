@@ -11,14 +11,18 @@ from __future__ import annotations
 import re
 from typing import Any, Optional
 
-from .. import engine, store
+from .. import data, engine, store
 from ..common import registry
 from ..common.i18n_server import pick
 from ..common.mask import mask_gstin, redact
-from ..contracts import AdvisorMessageRequest, AdvisorReply, BusinessProfile, Quote, SelectedItem
+from ..contracts import AdvisorMessageRequest, AdvisorReply, BusinessProfile, LineItem, Quote, SelectedItem
 from . import extract as extractor
 from . import templates as tpl
-from .rules_parser import NEED_PRODUCTS, Extraction, detect_language
+from .rules_parser import NEED_PRODUCTS, Extraction, detect_language, reply_language
+
+# Slots the advisor stops asking after two tries, with the value it assumes (and says so).
+ASSUMABLE = ("current_internet", "needs")
+MAX_COUNT = 100000
 
 REQUIRED = ["business_type", "city", "employees", "sites", "has_gstin", "current_internet", "needs"]
 TIER_FOR_SIZE = {"metro": 1, "big_city": 2, "small_town": 3}
@@ -41,7 +45,7 @@ def missing_fields(p: BusinessProfile) -> list[str]:
 
 def _initial_state() -> dict[str, Any]:
     return {"pending": None, "misses": 0, "place": None, "excluded": [], "asked": [], "explained": [], "quote_id": None,
-            "handoff_id": None}
+            "handoff_id": None, "repeats": 0, "target": None, "mode": "rules"}
 
 
 def _state(messages: list[dict]) -> dict[str, Any]:
@@ -92,23 +96,36 @@ def _apply(p: BusinessProfile, ex: Extraction, state: dict[str, Any], lang: str,
     if ex.city_size and state.get("place"):
         upd.update(city=state["place"], city_tier=TIER_FOR_SIZE[ex.city_size])
         state["place"] = None
-    for name in ("employees", "sites", "current_internet", "budget_monthly_inr"):
+    for name in ("employees", "sites"):
+        value = getattr(ex, name)
+        if value is not None:
+            if 1 <= value <= MAX_COUNT:
+                upd[name] = value
+            else:
+                ex.bad_number = True
+    if ex.bad_number:
+        parts.append(tpl.bad_number(lang))
+    for name in ("current_internet", "budget_monthly_inr"):
         if getattr(ex, name) is not None:
             upd[name] = getattr(ex, name)
     if ex.has_gstin is not None and "has_gstin" not in upd:
         upd["has_gstin"] = ex.has_gstin
         if ex.has_gstin is False:
             upd.update(gstin=None, gstin_status=None)
+    # A price question ("how much is WhatsApp API?") asks about a product; it doesn't add it to the plan.
+    asking_price = ex.intent == "ask_price"
+    needs_add = [] if asking_price else ex.needs_add
+    products_asked = [] if asking_price else ex.products_asked
     needs = [n for n in p.needs if n not in ex.needs_remove]
-    needs = _add_unique(needs, *ex.needs_add)
-    if ex.products_asked and "internet" not in needs and any(pid in ("P01", "P02", "P03", "P04", "P05", "P06") for pid in ex.products_asked):
+    needs = _add_unique(needs, *needs_add)
+    if products_asked and "internet" not in needs and any(pid in ("P01", "P02", "P03", "P04", "P05", "P06") for pid in products_asked):
         needs = _add_unique(needs, "internet")
     upd["needs"] = needs
 
     removed = [NEED_PRODUCTS[n] for n in ex.needs_remove if n in NEED_PRODUCTS] + ex.products_removed
-    readded = [NEED_PRODUCTS[n] for n in ex.needs_add if n in NEED_PRODUCTS] + ex.products_asked
+    readded = [NEED_PRODUCTS[n] for n in needs_add if n in NEED_PRODUCTS] + products_asked
     state["excluded"] = [pid for pid in _add_unique(state["excluded"], *removed) if pid not in readded]
-    state["asked"] = [pid for pid in _add_unique(state["asked"], *ex.products_asked) if pid not in removed]
+    state["asked"] = [pid for pid in _add_unique(state["asked"], *products_asked) if pid not in removed]
 
     p = p.model_copy(update=upd)
     # "A restaurant with 4 outlets" is a restaurant chain.
@@ -127,7 +144,9 @@ def _build_quote(p: BusinessProfile, state: dict[str, Any], cheaper: bool) -> tu
     ineligible = {i.product_id for i in q.ineligible}
     trimmed = False
     if cheaper:
-        addon_ids = [i.product_id for i in q.items if i.kind == "addon"]
+        # Cut extras, but never something the owner asked for (a stated need or a product they named).
+        wanted = {NEED_PRODUCTS[n] for n in p.needs if n in NEED_PRODUCTS} | set(state["asked"])
+        addon_ids = [i.product_id for i in q.items if i.kind == "addon" and i.product_id not in wanted]
         trimmed = bool(addon_ids)
         state["excluded"] = _add_unique(state["excluded"], *addon_ids)
     selected = [SelectedItem(product_id=i.product_id, quantity=i.quantity) for i in q.items if i.product_id not in state["excluded"]]
@@ -157,6 +176,9 @@ def _explain_unavailable(q: Quote, p: BusinessProfile, state: dict[str, Any], la
 
 def _reply(sid: str, messages: list[dict], p: BusinessProfile, state: dict[str, Any], *, text: str, quick: list[str],
            stage: str, mode: str, quote: Optional[Quote] = None) -> AdvisorReply:
+    # Owners writing Tamil, Telugu, Hinglish in English letters, etc. get the reply translated (numbers are guarded).
+    if mode == "llm" and state.get("target") in extractor.LANGUAGE_NAMES:
+        text = extractor.localize(text, state["target"]) or text
     messages.append({"role": "assistant", "text": text, "ts": store.now().isoformat(), "stage": stage, "mode": mode,
                      "quote_id": quote.quote_id if quote else None, "state": state})
     store.update_session(sid, profile=p, messages=messages, stage=stage, mode=mode)
@@ -167,6 +189,63 @@ def _reply(sid: str, messages: list[dict], p: BusinessProfile, state: dict[str, 
 
 def _public_quote(q: Quote) -> Quote:
     return q.model_copy(update={"profile": _public_profile(q.profile)})
+
+
+def _product_name(pid: str) -> str:
+    product = data.products_by_id().get(pid)
+    return product.name if product else pid
+
+
+def _price_answer(ex: Extraction, q: Optional[Quote], lang: str) -> str:
+    """Answer "how much is X?" from the engine's numbers: the owner's own line if it's in (or can be added to) their
+    plan, else the catalogue's standard monthly price. The LLM never writes these numbers."""
+    pids = list(dict.fromkeys(ex.products_asked + [NEED_PRODUCTS[n] for n in ex.needs_add if n in NEED_PRODUCTS]))
+    if not pids:
+        return tpl.price_unknown(lang)
+    lines = []
+    for pid in pids[:3]:
+        line: Optional[LineItem] = None
+        in_plan = False
+        if q:
+            line = next((i for i in q.items if i.product_id == pid), None)
+            in_plan = line is not None
+            line = line or next((a for a in q.addons_available if a.product_id == pid), None)
+            blocked = next((i for i in q.ineligible if i.product_id == pid), None)
+            if line is None and blocked:
+                product = data.products_by_id().get(pid)
+                price = ""
+                if product:
+                    unit = round((product.price_min_inr + product.price_max_inr) / 2)
+                    price = tpl.price_line(product.name, unit, unit, 1, product.setup_inr, True, lang).rstrip("।.") + ". "
+                lines.append(price + pick(blocked.reason, lang) if price else f"{blocked.name}: {pick(blocked.reason, lang)}")  # type: ignore[arg-type]
+                continue
+        if line:
+            lines.append(tpl.price_line(line.name, line.monthly_inr, line.unit_price_inr, line.quantity, line.setup_inr,
+                                        in_plan, lang))
+            continue
+        product = data.products_by_id().get(pid)
+        if product:
+            unit = round((product.price_min_inr + product.price_max_inr) / 2)
+            lines.append(tpl.price_line(product.name, unit, unit, 1, product.setup_inr, q is None, lang))
+    return "\n".join(f"• {l}" for l in lines) if lines else tpl.price_unknown(lang)
+
+
+def _change_summary(prev: Optional[Quote], q: Quote, ex: Extraction, lang: str) -> str:
+    """Say exactly what changed between the previous and the new plan, or that nothing did."""
+    if prev is None:
+        return tpl.updated(lang)
+    if (prev.profile.city or "") != (q.profile.city or "") and q.profile.city:
+        return tpl.plan_moved(q.profile.city, lang)
+    old = {i.product_id: i for i in prev.items}
+    new = {i.product_id: i for i in q.items}
+    added = [new[p].name for p in new if p not in old]
+    removed = [old[p].name for p in old if p not in new]
+    changed = [f"{new[p].name} ×{new[p].quantity}" for p in new if p in old and new[p].quantity != old[p].quantity]
+    if added or removed or changed:
+        return tpl.plan_changes(added, removed, changed, lang)
+    asked_off = [*ex.products_removed, *[NEED_PRODUCTS[n] for n in ex.needs_remove if n in NEED_PRODUCTS]]
+    absent = [_product_name(pid) for pid in dict.fromkeys(asked_off) if pid not in old]
+    return tpl.not_in_plan(absent, lang) if absent else tpl.no_change(lang)
 
 
 HANDOFF_REASONS = {
@@ -204,6 +283,12 @@ def handle_message(req: AdvisorMessageRequest) -> AdvisorReply:
     if mode == "llm" and ex.language and len(text.split()) >= 3:
         detected = ex.language
     lang = detected or (req.language if first_turn else None) or p.language or "en"
+    # Answer in the owner's own language and script. Templates cover English and Hindi (Devanagari); for anything
+    # else the reply is written in English and translated by the LLM in _reply. Without an LLM, Hinglish gets Hindi.
+    target = reply_language(text) or state.get("target")
+    state["target"] = target
+    if mode == "llm" and target in extractor.LANGUAGE_NAMES:
+        lang = "en"
     p = p.model_copy(update={"language": lang})
 
     if ex.intent == "handoff":
@@ -226,6 +311,8 @@ def handle_message(req: AdvisorMessageRequest) -> AdvisorReply:
         parts.insert(0, tpl.not_understood(lang))
     elif not had_business and p.business_type and p.city:
         parts.insert(0, tpl.greeting_ack(p, lang))
+    if ex.unsupported:
+        parts.append(tpl.unsupported(ex.unsupported, lang))
 
     missing = missing_fields(p)
     if state.get("place") and p.city_tier is None:
@@ -233,29 +320,49 @@ def handle_message(req: AdvisorMessageRequest) -> AdvisorReply:
         parts.append(tpl.question("city_size", p, lang, place=state["place"]))
         return _reply(sid, messages, p, state, text="\n\n".join(parts), quick=tpl.quick_replies("city_size", p, lang),
                       stage="asking", mode=mode)
+    # Asked twice and still unanswered: assume a sensible value, say so, and move on (no question loops).
+    while missing and missing[0] in ASSUMABLE and missing[0] == state["pending"] and state.get("repeats", 0) >= 1:
+        if missing[0] == "current_internet":
+            mixed = (p.sites or 1) >= 2
+            p = p.model_copy(update={"current_internet": "mixed" if mixed else "none"})
+            parts.append(tpl.assumed_internet(lang, mixed))
+        else:
+            p = p.model_copy(update={"needs": ["internet"]})
+        state["repeats"] = 0
+        missing = missing_fields(p)
     if missing:
         slot = missing[0]
+        state["repeats"] = state.get("repeats", 0) + 1 if slot == state["pending"] else 0
         state["pending"] = slot
+        if ex.intent == "ask_price":
+            parts.append(_price_answer(ex, None, lang))
         parts.append(tpl.question(slot, p, lang))
         return _reply(sid, messages, p, state, text="\n\n".join(parts), quick=tpl.quick_replies(slot, p, lang),
                       stage="asking", mode=mode)
 
     # Every slot is filled: the rules engine decides the products and prices.
     state["pending"] = None
+    state["repeats"] = 0
     was_recommended = session["stage"] == "recommended"
     excluded_before = list(state["excluded"])
+    prev = store.get_quote(state["quote_id"]) if state.get("quote_id") else None
     q, trimmed = _build_quote(p, state, cheaper=ex.cheaper)
     state["quote_id"] = q.quote_id
 
     if ex.intent == "ask_why" and was_recommended:
         lines = [f"• {i.name}: {pick(i.reason, lang)}" for i in q.items]  # type: ignore[arg-type]
         parts.append(tpl.why_header(lang) + "\n" + "\n".join(lines))
+    elif ex.intent == "ask_price" and was_recommended:
+        parts.append(_price_answer(ex, q, lang))
     elif ex.intent == "accept" and was_recommended:
         parts.append(tpl.accepted(lang))
     elif ex.cheaper and was_recommended:
-        parts.append(tpl.cheaper(lang) if trimmed or state["excluded"] != excluded_before else tpl.already_minimal(lang))
+        if trimmed or state["excluded"] != excluded_before:
+            parts.append(tpl.cheaper(lang) + "\n" + _change_summary(prev, q, ex, lang))
+        else:
+            parts.append(tpl.kept_requested(lang))
     elif was_recommended:
-        parts.append(tpl.updated(lang))
+        parts.append(_change_summary(prev, q, ex, lang))
     else:
         template = tpl.intro(p, lang)
         parts.append(tpl.safe_text(extractor.rephrase(template, lang) if mode == "llm" else None, template))

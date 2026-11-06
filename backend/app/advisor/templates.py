@@ -84,7 +84,10 @@ def quick_replies(slot: str, p: BusinessProfile, lang: str) -> list[str]:
         en, hi = _NEEDS_QR.get(p.segment or "micro", _NEEDS_QR["micro"])
     else:
         en, hi = QUICK_REPLIES.get(slot, ([], []))
-    return list(hi if lang == "hi" else en)
+    out = list(hi if lang == "hi" else en)
+    if slot == "current_internet" and (p.sites or 1) >= 2:
+        out.append("हर जगह अलग कनेक्शन" if lang == "hi" else "Different at each site")
+    return out
 
 
 def after_quote_quick_replies(lang: str) -> list[str]:
@@ -199,3 +202,73 @@ def gstin_unknown(lang: str) -> str:
 
 def product_unavailable_intro(lang: str) -> str:
     return T(lang, "One thing you asked for isn't possible:", "आपने जो माँगा, उसमें से एक चीज़ नहीं मिल सकती:")
+
+
+def bad_number(lang: str) -> str:
+    return T(lang, "That number doesn't look right. Please count yourself too, and every shop or branch you have.",
+             "यह संख्या सही नहीं लग रही। कृपया अपने को भी गिनिए, और अपनी हर दुकान या शाखा भी।")
+
+
+def assumed_internet(lang: str, mixed: bool) -> str:
+    if mixed:
+        return T(lang, "I'll take it that each of your sites has its own connection today.",
+                 "मैं मान रहा हूँ कि अभी आपकी हर जगह का अपना अलग कनेक्शन है।")
+    return T(lang, "I'll take it that you need a new connection.", "मैं मान रहा हूँ कि आपको नया कनेक्शन चाहिए।")
+
+
+def kept_requested(lang: str) -> str:
+    return T(lang, "Everything left in your plan is something you asked for. Tell me what to drop, for example “remove CCTV”.",
+             "आपके प्लान में अब वही चीज़ें हैं जो आपने माँगी थीं। बताइए क्या हटाना है, जैसे “CCTV हटा दो”।")
+
+
+def unsupported(items: list[str], lang: str) -> str:
+    names = ", ".join(items)
+    return T(lang, "Accel Business doesn't offer {names}, so I've left that out.",
+             "Accel Business {names} नहीं देता, इसलिए मैंने उसे शामिल नहीं किया।", names=names)
+
+
+def plan_changes(added: list[str], removed: list[str], changed: list[str], lang: str) -> str:
+    """'Done: added X. Removed Y. Z is now 4.' Names are product names; changed entries already read 'Name: ×4'."""
+    lines = []
+    if added:
+        lines.append(T(lang, "Added: {x}.", "जोड़ा: {x}।", x=", ".join(added)))
+    if removed:
+        lines.append(T(lang, "Removed: {x}.", "हटाया: {x}।", x=", ".join(removed)))
+    if changed:
+        lines.append(T(lang, "Changed: {x}.", "बदला: {x}।", x=", ".join(changed)))
+    return T(lang, "Done. ", "हो गया। ") + " ".join(lines)
+
+
+def plan_moved(city: str, lang: str) -> str:
+    return T(lang, "I've redone the plan for {city}.", "मैंने {city} के लिए प्लान फिर से बनाया है।", city=city)
+
+
+def no_change(lang: str) -> str:
+    return T(lang, "Your plan stays the same.", "आपका प्लान वैसा ही है।")
+
+
+def not_in_plan(names: list[str], lang: str) -> str:
+    return T(lang, "{x} isn't in your plan, so nothing changed.", "{x} आपके प्लान में नहीं है, इसलिए कुछ नहीं बदला।",
+             x=", ".join(names))
+
+
+def price_line(name: str, monthly: int, unit_price: int, qty: int, setup: int, in_plan: bool, lang: str) -> str:
+    """A price answer from the rules engine (never from the LLM)."""
+    m, u, s = f"₹{monthly:,}", f"₹{unit_price:,}", f"₹{setup:,}"
+    if qty > 1:
+        base = T(lang, "{name}: {m} a month ({u} each × {q})", "{name}: {m} महीना ({u} प्रति यूनिट × {q})",
+                 name=name, m=m, u=u, q=qty)
+    else:
+        base = T(lang, "{name}: {m} a month", "{name}: {m} महीना", name=name, m=m)
+    if setup:
+        base += T(lang, ", plus {s} one-time setup", ", साथ में {s} एक बार का सेटअप", s=s)
+    base += T(lang, " (+18% GST).", " (+18% GST)।")
+    if not in_plan:
+        base += T(lang, " It's not in your plan; say “add it” if you want it.",
+                  " यह आपके प्लान में नहीं है; चाहिए तो “जोड़ दो” कहिए।")
+    return base
+
+
+def price_unknown(lang: str) -> str:
+    return T(lang, "Every price is in the plan card. Tell me which service you want the price for.",
+             "हर कीमत प्लान कार्ड में है। बताइए किस सेवा की कीमत जाननी है।")
