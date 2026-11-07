@@ -32,13 +32,13 @@ export function ResultStep({ result, orderId, onRetake, onBack, busy }: {
         <Link to={`/track/${orderId}`} className="block"><Button full size="lg">{t("kyc.track")}</Button></Link>
       )}
       <Card>
-        <ul className="divide-y divide-line">
+        <ul className="divide-y divide-border">
           {checks.map((c, i) => (
             <li key={`${c.code}-${c.doc_type ?? ""}-${i}`} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
               <span className="mt-0.5"><Pill tone={CHECK_TONE[c.status]}>{label[c.status]}</Pill></span>
               <div className="min-w-0 flex-1">
-                <p className={c.status === "PASS" ? "text-muted" : "font-medium"}>{lt(c.message)}</p>
-                {c.status !== "PASS" && c.fix_hint && <p className="mt-0.5 text-sm text-muted">{lt(c.fix_hint)}</p>}
+                <p className={c.status === "PASS" ? "text-muted-foreground" : "font-medium"}>{lt(c.message)}</p>
+                {c.status !== "PASS" && c.fix_hint && <p className="mt-0.5 text-sm text-muted-foreground">{lt(c.fix_hint)}</p>}
                 {c.status === "FAIL" && c.doc_type && FIXABLE.has(c.code) && result.verdict === "ACTION_REQUIRED" && (
                   <div className="mt-2">
                     <PhotoButton label={`${t("kyc.slot.retake")}: ${t(`kyc.doc.${c.doc_type}`)}`} onFile={(f) => onRetake(c.doc_type as DocType, f)} disabled={!!busy} />

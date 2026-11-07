@@ -41,7 +41,7 @@ export function UploadStep({ slots, onUpload, onSubmit, onSample, busy }: {
 
   return (
     <div className="space-y-4">
-      <p className="text-muted">{t("kyc.docs.intro")}</p>
+      <p className="text-muted-foreground">{t("kyc.docs.intro")}</p>
       {DOC_TYPES.map((d) => {
         const slot = slots[d];
         const tone = slotTone(slot);
@@ -53,7 +53,7 @@ export function UploadStep({ slots, onUpload, onSubmit, onSample, busy }: {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-semibold">{t(`kyc.doc.${d}`)}</p>
-                <p className="text-sm text-muted">{t(`kyc.doc.${d}.hint`)}</p>
+                <p className="text-sm text-muted-foreground">{t(`kyc.doc.${d}.hint`)}</p>
               </div>
               <span className="shrink-0 whitespace-nowrap"><Pill tone={tone}>{pill}</Pill></span>
             </div>
@@ -67,28 +67,27 @@ export function UploadStep({ slots, onUpload, onSubmit, onSample, busy }: {
               <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
                 {fields.map(([k, v]) => (
                   <div key={k} className="contents">
-                    <dt className="text-muted">{t(`kyc.field.${k}`)}</dt>
+                    <dt className="text-muted-foreground">{t(`kyc.field.${k}`)}</dt>
                     <dd className="min-w-0 break-words font-medium">{v}</dd>
                   </div>
                 ))}
               </dl>
             )}
-            {!!slot.result && slot.result.quality.skew_deg !== 0 && <p className="mt-2 text-xs text-muted">{t("kyc.slot.straightened")}</p>}
+            {!!slot.result && slot.result.quality.skew_deg !== 0 && <p className="mt-2 text-xs text-muted-foreground">{t("kyc.slot.straightened")}</p>}
             <div className="mt-3">
-              <PhotoButton label={slot.status === "empty" ? t("kyc.slot.take") : t("kyc.slot.retake")} onFile={(f) => onUpload(d, f)}
-                variant={slot.status === "empty" ? "primary" : "secondary"} />
+              <PhotoButton label={slot.status === "empty" ? t("kyc.slot.take") : t("kyc.slot.retake")} onFile={(f) => onUpload(d, f)} />
             </div>
           </Card>
         );
       })}
 
-      {added < 4 && added > 0 && <p className="text-sm text-muted">{t("kyc.missing", { n: added })}</p>}
+      {added < 4 && added > 0 && <p className="text-sm text-muted-foreground">{t("kyc.missing", { n: added })}</p>}
       <Button full size="lg" disabled={added === 0 || anyChecking || !!busy} onClick={onSubmit}>{t("kyc.submit")}</Button>
 
       {meta.demo_mode && meta.sample_applicants.length > 0 && (
         <Card className="border-dashed">
           <div className="flex items-center gap-2"><Pill tone="warn">{t("common.demo")}</Pill><p className="font-semibold">{t("kyc.sample.title")}</p></div>
-          <p className="mt-1 text-sm text-muted">{t("kyc.sample.body")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("kyc.sample.body")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {meta.sample_applicants.map((id) => <Chip key={id} disabled={!!busy} onClick={() => onSample(id)}>{id}</Chip>)}
           </div>

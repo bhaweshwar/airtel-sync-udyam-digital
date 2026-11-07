@@ -6,7 +6,7 @@ import type { InstallSlot, Order, OrderStatus } from "../../api/types";
 import { useT } from "../../i18n";
 import { useJourney } from "../../state/journey";
 import { useMeta } from "../../state/meta";
-import { Banner, Button, Card, Chip, Money, PageTitle, Pill, Spinner, Timeline, cx, type Tone } from "../../ui";
+import { Banner, Button, buttonClass, Card, Chip, Money, PageTitle, Pill, Spinner, Timeline, cx, type Tone } from "../../ui";
 
 const POLL_MS = 10_000;
 
@@ -61,19 +61,19 @@ export function TrackLookupPage() {
     }
   }
 
-  const input = "mt-1 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-base focus:border-brand-600 focus:outline-none";
+  const input = "mt-1 w-full rounded-md border border-border bg-card px-3 py-2.5 text-base focus:border-foreground/40 focus:outline-none";
   return (
     <div>
       <PageTitle title={t("track.title")} subtitle={t("track.lookup.subtitle")} />
       <Card>
         <form onSubmit={submit} className="space-y-4">
           <label className="block">
-            <span className="text-sm font-semibold">{t("track.lookup.orderId")}</span>
+            <span className="text-sm font-medium">{t("track.lookup.orderId")}</span>
             <input className={cx(input, "uppercase")} value={orderId} onChange={(e) => setOrderId(e.target.value)}
               placeholder={t("track.lookup.orderIdHint")} autoComplete="off" required />
           </label>
           <label className="block">
-            <span className="text-sm font-semibold">{t("track.lookup.pin")}</span>
+            <span className="text-sm font-medium">{t("track.lookup.pin")}</span>
             <input className={cx(input, "tabular tracking-[0.4em]")} value={pin} inputMode="numeric" pattern="[0-9]{4}" maxLength={4}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} autoComplete="off" required />
           </label>
@@ -168,17 +168,17 @@ export function TrackOrderPage() {
       <PageTitle title={t("track.title")} subtitle={t("track.order.subtitle", { id: order.order_id })} />
       <div className="flex flex-wrap items-center gap-2">
         <Pill tone={STATUS_TONE[order.status]}>{statusLabel}</Pill>
-        <span className="text-xs text-muted">{t("track.refreshing")}</span>
+        <span className="text-xs text-muted-foreground">{t("track.refreshing")}</span>
       </div>
       {error !== null && <Banner tone="bad">{errorText(error, t)}</Banner>}
 
       {order.next_action && (
-        <Card className={cx(order.status === "KYC_ACTION_REQUIRED" && "border-warn")}>
-          <p className="text-sm font-semibold text-muted">{t("track.next.title")}</p>
+        <Card className={cx(order.status === "KYC_ACTION_REQUIRED" && "border-warning/40")}>
+          <p className="text-sm font-medium text-muted-foreground">{t("track.next.title")}</p>
           <p className="mt-1 text-lg font-semibold">{lt(order.next_action)}</p>
           {needsDocs && (
             <Link to={`/kyc/${encodeURIComponent(order.order_id)}`}
-              className="mt-3 inline-flex rounded-xl bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
+              className={cx(buttonClass("primary", "sm"), "mt-3")}>
               {t("track.next.uploadDocs")}
             </Link>
           )}
@@ -197,11 +197,11 @@ export function TrackOrderPage() {
       {wantsSlots && (
         <Card>
           <h2 className="font-semibold">{t("track.slots.title")}</h2>
-          <p className="text-sm text-muted">{t("track.slots.subtitle")}</p>
+          <p className="text-sm text-muted-foreground">{t("track.slots.subtitle")}</p>
           <div className="mt-3 space-y-3">
             {[...new Set(slots.map((s) => s.date))].map((d) => (
               <div key={d}>
-                <p className="text-sm font-semibold">{fmt(d)}</p>
+                <p className="text-sm font-medium">{fmt(d)}</p>
                 <div className="mt-1 flex flex-wrap gap-2">
                   {slots.filter((s) => s.date === d).map((s) => (
                     <Chip key={s.window} selected={picked?.date === s.date && picked.window === s.window} onClick={() => setPicked(s)}>
@@ -230,28 +230,28 @@ export function TrackOrderPage() {
       <Card>
         <h2 className="font-semibold">{t("track.eta.title")}</h2>
         {order.status === "ACTIVE" ? (
-          <p className="mt-1 text-sm text-muted">{t("track.eta.live")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("track.eta.live")}</p>
         ) : order.eta_activation_date ? (
           <>
-            <p className="mt-1 text-sm text-muted">{t("track.eta.activation", { date: fmt(order.eta_activation_date) })}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("track.eta.activation", { date: fmt(order.eta_activation_date) })}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {order.item_etas.map((e) => (
-                <span key={e.product_id} className="rounded-full border border-line bg-surface px-3 py-1 text-sm">
+                <span key={e.product_id} className="rounded-md border border-border bg-secondary px-2.5 py-1 text-sm">
                   <span className="font-medium">{e.name}</span>
-                  {e.eta && <span className="text-muted"> · {t("common.estimated")} {fmt(e.eta)}</span>}
+                  {e.eta && <span className="text-muted-foreground"> · {t("common.estimated")} {fmt(e.eta)}</span>}
                 </span>
               ))}
             </div>
           </>
-        ) : <p className="mt-1 text-sm text-muted">{t("track.eta.none")}</p>}
+        ) : <p className="mt-1 text-sm text-muted-foreground">{t("track.eta.none")}</p>}
       </Card>
 
       <Card>
         <h2 className="font-semibold">{t("track.items.title")}</h2>
-        <ul className="mt-2 divide-y divide-line">
+        <ul className="mt-2 divide-y divide-border">
           {order.items.map((i) => (
             <li key={i.product_id} className="flex justify-between gap-3 py-2 text-sm">
-              <span>{i.name}{i.quantity > 1 && <span className="text-muted"> × {i.quantity}</span>}</span>
+              <span>{i.name}{i.quantity > 1 && <span className="text-muted-foreground"> × {i.quantity}</span>}</span>
               <Money amount={i.monthly_inr} suffix={t("common.perMonth")} />
             </li>
           ))}
@@ -267,7 +267,7 @@ export function TrackOrderPage() {
         <ol className="space-y-2">
           {[...order.events].reverse().map((ev, i) => (
             <li key={i} className="text-sm">
-              <span className="text-muted tabular">{new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short", timeZone: "Asia/Kolkata" }).format(new Date(ev.ts))}</span>
+              <span className="text-muted-foreground tabular">{new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short", timeZone: "Asia/Kolkata" }).format(new Date(ev.ts))}</span>
               {" · "}{lt(ev.text)}
             </li>
           ))}
@@ -275,16 +275,16 @@ export function TrackOrderPage() {
       </Card>
 
       <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noreferrer"
-        className="flex w-full items-center justify-center rounded-xl border border-ok bg-ok-bg px-4 py-2.5 font-semibold text-ok">
+        className={cx(buttonClass("secondary"), "w-full")}>
         {t("track.share")}
       </a>
 
       {meta.demo_mode && order.status !== "ACTIVE" && order.status !== "REJECTED" && (
-        <div className="rounded-xl border border-dashed border-warn p-3">
+        <div className="rounded-md border border-dashed border-border p-3">
           <Button variant="secondary" full disabled={busy} onClick={() => act(() => api.advanceOrder(order.order_id, { pin }))}>
             {t("track.demo.advance")}
           </Button>
-          <p className="mt-1 text-center text-xs text-muted">{t("track.demo.note")}</p>
+          <p className="mt-1 text-center text-xs text-muted-foreground">{t("track.demo.note")}</p>
         </div>
       )}
     </div>

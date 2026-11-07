@@ -6,7 +6,7 @@ import { api, ApiError } from "../../api/client";
 import type { LineItem, Quote, SelectedItem } from "../../api/types";
 import { useJourney } from "../../state/journey";
 import { useT } from "../../i18n";
-import { Banner, Button, Card, Money, PageTitle, Spinner, Stepper, Toggle, formatInr } from "../../ui";
+import { Banner, Button, buttonClass, Card, cx, Money, PageTitle, Spinner, Stepper, Toggle, formatInr } from "../../ui";
 
 function selectionOf(quote: Quote): SelectedItem[] {
   return quote.items.map((i) => ({ product_id: i.product_id, quantity: i.quantity }));
@@ -37,8 +37,8 @@ export function QuotePage() {
         <PageTitle title={t("quote.title")} />
         <Card>
           <p className="font-semibold">{t("quote.none.title")}</p>
-          <p className="mt-1 text-muted">{t("quote.none.body")}</p>
-          <Link to="/advisor" className="mt-4 inline-block rounded-xl bg-brand-600 px-4 py-2.5 font-semibold text-white hover:bg-brand-700">
+          <p className="mt-1 text-muted-foreground">{t("quote.none.body")}</p>
+          <Link to="/advisor" className={cx(buttonClass(), "mt-4")}>
             {t("quote.none.cta")}
           </Link>
         </Card>
@@ -78,31 +78,31 @@ export function QuotePage() {
       ))}
       {error && <Banner tone="bad">{error}</Banner>}
 
-      <Card className="bg-brand-50">
-        <p className="text-sm font-semibold text-brand-700">{t("quote.monthly")}</p>
-        <p className="mt-1 text-4xl font-extrabold text-ink">
+      <Card>
+        <p className="text-sm text-muted-foreground">{t("quote.monthly")}</p>
+        <p className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
           <Money amount={quote.monthly_total_inr} suffix={t("common.perMonth")} />
         </p>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-sm text-muted-foreground">
           {t("quote.withGst", { amount: formatInr(quote.monthly_total_with_gst_inr) })}
         </p>
-        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-brand-100 pt-3 text-sm">
+        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-3 text-sm">
           <div>
-            <dt className="text-muted">{t("quote.setup")}</dt>
+            <dt className="text-muted-foreground">{t("quote.setup")}</dt>
             <dd className="font-semibold">{quote.one_time_total_inr > 0 ? <Money amount={quote.one_time_total_inr} /> : t("quote.noSetup")}</dd>
           </div>
           <div>
-            <dt className="text-muted">{t("quote.contract")}</dt>
+            <dt className="text-muted-foreground">{t("quote.contract")}</dt>
             <dd className="font-semibold">{quote.contract_months > 0 ? t("common.months", { n: quote.contract_months }) : "–"}</dd>
           </div>
         </dl>
-        <p className="mt-2 text-xs text-muted">{t("quote.validUntil", { date: validUntil })}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{t("quote.validUntil", { date: validUntil })}</p>
         <div className="mt-2 h-5">{busy && <Spinner label={t("quote.updating")} />}</div>
       </Card>
 
       <section>
-        <h2 className="mb-2 text-lg font-bold">{t("quote.included")}</h2>
-        {quote.items.length === 0 && <p className="text-muted">{t("quote.empty")}</p>}
+        <h2 className="mb-2 text-lg font-semibold">{t("quote.included")}</h2>
+        {quote.items.length === 0 && <p className="text-muted-foreground">{t("quote.empty")}</p>}
         <ul className="flex flex-col gap-3">
           {quote.items.map((item) => (
             <li key={item.product_id}>
@@ -110,14 +110,14 @@ export function QuotePage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold">{item.name}</p>
-                    <p className="mt-0.5 text-sm text-muted">{lt(item.reason)}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{lt(item.reason)}</p>
                   </div>
-                  <p className="shrink-0 text-right font-bold"><Money amount={item.monthly_inr} /></p>
+                  <p className="shrink-0 text-right font-semibold"><Money amount={item.monthly_inr} /></p>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Stepper value={item.quantity} label={t("quote.qty", { name: item.name })} onChange={(v) => setQty(item.product_id, v)} />
-                    <span className="text-xs text-muted">{t("quote.each", { price: formatInr(item.unit_price_inr) })}</span>
+                    <span className="text-xs text-muted-foreground">{t("quote.each", { price: formatInr(item.unit_price_inr) })}</span>
                   </div>
                   <Button variant="ghost" size="sm" disabled={busy} onClick={() => remove(item.product_id)}>{t("quote.remove")}</Button>
                 </div>
@@ -129,17 +129,17 @@ export function QuotePage() {
 
       {quote.addons_available.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold">{t("quote.addons")}</h2>
-          <p className="mb-2 text-sm text-muted">{t("quote.addons.hint")}</p>
-          <ul className="flex flex-col divide-y divide-line rounded-2xl border border-line bg-white">
+          <h2 className="text-lg font-semibold">{t("quote.addons")}</h2>
+          <p className="mb-2 text-sm text-muted-foreground">{t("quote.addons.hint")}</p>
+          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
             {quote.addons_available.map((item) => (
               <li key={item.product_id} className="flex items-start gap-3 p-4">
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{item.name}</p>
-                  <p className="mt-0.5 text-sm text-muted">{lt(item.reason)}</p>
-                  <p className="mt-1 text-sm font-semibold">
+                  <p className="mt-0.5 text-sm text-muted-foreground">{lt(item.reason)}</p>
+                  <p className="mt-1 text-sm font-medium">
                     <Money amount={item.monthly_inr} suffix={t("common.perMonth")} />
-                    {item.setup_inr > 0 && <span className="font-normal text-muted"> · {formatInr(item.setup_inr)} {t("common.oneTime")}</span>}
+                    {item.setup_inr > 0 && <span className="font-normal text-muted-foreground"> · {formatInr(item.setup_inr)} {t("common.oneTime")}</span>}
                   </p>
                 </div>
                 <Toggle checked={false} disabled={busy} label={t("quote.addon.toggle", { name: item.name })} onChange={() => add(item)} />
@@ -150,13 +150,13 @@ export function QuotePage() {
       )}
 
       {quote.ineligible.length > 0 && (
-        <details className="rounded-2xl border border-line bg-white p-4">
+        <details className="rounded-lg border border-border bg-card p-4">
           <summary className="cursor-pointer font-semibold">{t("quote.ineligible", { n: quote.ineligible.length })}</summary>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
             {quote.ineligible.map((x) => (
               <li key={x.product_id}>
                 <span className="font-semibold">{x.name}</span>
-                <span className="text-muted"> · {lt(x.reason)}</span>
+                <span className="text-muted-foreground"> · {lt(x.reason)}</span>
               </li>
             ))}
           </ul>
@@ -166,11 +166,11 @@ export function QuotePage() {
       {checkout ? (
         <Checkout quote={quote} onCancel={() => setCheckout(false)} onPlaced={(p) => { setPlaced(p); window.scrollTo(0, 0); }} />
       ) : (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 px-4 py-3 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background px-4 py-3">
           <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-lg font-extrabold leading-tight"><Money amount={quote.monthly_total_inr} suffix={t("common.perMonth")} /></p>
-              <p className="text-xs text-muted">{t("common.plusGst")}</p>
+              <p className="text-lg font-semibold leading-tight"><Money amount={quote.monthly_total_inr} suffix={t("common.perMonth")} /></p>
+              <p className="text-xs text-muted-foreground">{t("common.plusGst")}</p>
             </div>
             <Button size="lg" disabled={busy || quote.items.length === 0} onClick={() => setCheckout(true)}>{t("quote.confirm")}</Button>
           </div>
@@ -186,19 +186,19 @@ function PlacedCard({ placed }: { placed: Placed }) {
   const { t } = useT();
   const navigate = useNavigate();
   return (
-    <Card className="border-ok">
-      <p className="text-lg font-bold">{t("quote.done.title")}</p>
+    <Card>
+      <p className="text-lg font-semibold">{t("quote.done.title")}</p>
       <dl className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <dt className="text-sm text-muted">{t("quote.done.order")}</dt>
+          <dt className="text-sm text-muted-foreground">{t("quote.done.order")}</dt>
           <dd className="font-semibold break-all">{placed.orderId}</dd>
         </div>
         <div>
-          <dt className="text-sm text-muted">{t("quote.done.pin")}</dt>
-          <dd className="tabular text-3xl font-extrabold tracking-widest">{placed.pin}</dd>
+          <dt className="text-sm text-muted-foreground">{t("quote.done.pin")}</dt>
+          <dd className="font-mono text-3xl font-medium tracking-[0.2em]">{placed.pin}</dd>
         </div>
       </dl>
-      <p className="mt-3 text-sm text-muted">{t("quote.done.pinNote")}</p>
+      <p className="mt-3 text-sm text-muted-foreground">{t("quote.done.pinNote")}</p>
       <Button full size="lg" className="mt-4" onClick={() => navigate(`/kyc/${placed.orderId}`)}>{t("quote.done.next")}</Button>
     </Card>
   );
@@ -241,20 +241,20 @@ function Checkout({ quote, onCancel, onPlaced }: { quote: Quote; onCancel: () =>
     }
   }
 
-  const input = "mt-1 w-full rounded-xl border border-line bg-white px-3 py-2.5 text-base focus:border-brand-600 focus:outline-none";
+  const input = "mt-1 w-full rounded-md border border-border bg-card px-3 py-2.5 text-base focus:border-foreground/40 focus:outline-none";
   return (
     <Card>
       <form ref={formRef} onSubmit={submit} className="flex scroll-mt-20 flex-col gap-3" noValidate>
-        <p className="text-lg font-bold">{t("quote.form.title")}</p>
-        <label className="text-sm font-semibold">
+        <p className="text-lg font-semibold">{t("quote.form.title")}</p>
+        <label className="text-sm font-medium">
           {t("quote.form.name")}
           <input ref={nameRef} className={input} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={120} />
         </label>
-        <label className="text-sm font-semibold">
+        <label className="text-sm font-medium">
           {t("quote.form.phone")}
           <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" inputMode="numeric"
             autoComplete="tel-national" maxLength={15} />
-          <span className="mt-1 block font-normal text-muted">{t("quote.form.phoneHint")}</span>
+          <span className="mt-1 block font-normal text-muted-foreground">{t("quote.form.phoneHint")}</span>
         </label>
         {fieldError && <Banner tone="bad">{fieldError}</Banner>}
         {error && <Banner tone="bad">{error}</Banner>}

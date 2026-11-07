@@ -39,13 +39,13 @@ export function ConsentStep({ orderId, notice: banner, onDone }: { orderId: stri
       {banner && <Banner tone="warn">{banner}</Banner>}
       <Card>
         <h2 className="text-lg font-semibold">{t("kyc.consent.title")}</h2>
-        <p className="mt-1 text-muted">{t("kyc.consent.intro")}</p>
+        <p className="mt-1 text-muted-foreground">{t("kyc.consent.intro")}</p>
         <ul className="mt-4 space-y-3">
           {notice.purposes.map((p) => (
             <li key={p.id}>
               <label className="flex items-start gap-3" htmlFor={`consent-${p.id}`}>
                 <input type="checkbox" id={`consent-${p.id}`} aria-label={lt(p.text)}
-                  className="mt-1 h-5 w-5 shrink-0 accent-brand-600" checked={!!accepted[p.id]}
+                  className="mt-1 h-5 w-5 shrink-0 accent-foreground" checked={!!accepted[p.id]}
                   onChange={(e) => setAccepted((a) => ({ ...a, [p.id]: e.target.checked }))} />
                 <span className="min-w-0">
                   <span className="block">{lt(p.text)}</span>
@@ -55,15 +55,15 @@ export function ConsentStep({ orderId, notice: banner, onDone }: { orderId: stri
             </li>
           ))}
         </ul>
-        <details className="mt-4 rounded-xl bg-surface p-3 text-sm">
-          <summary className="cursor-pointer font-semibold text-brand-700">{t("kyc.consent.fullNotice")}</summary>
+        <details className="mt-4 rounded-md bg-secondary p-3 text-sm">
+          <summary className="cursor-pointer font-medium underline-offset-4 hover:underline">{t("kyc.consent.fullNotice")}</summary>
           <div className="mt-2 space-y-2 whitespace-pre-line">{lt(notice.body)}</div>
           <p className="mt-3 font-semibold">{t("kyc.consent.retention")}</p>
           <p>{lt(notice.retention)}</p>
-          <p className="mt-2 text-xs text-muted">{t("kyc.consent.version", { v: notice.version })}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t("kyc.consent.version", { v: notice.version })}</p>
         </details>
       </Card>
-      {!requiredOk && <p className="text-sm text-muted">{t("kyc.consent.needRequired")}</p>}
+      {!requiredOk && <p className="text-sm text-muted-foreground">{t("kyc.consent.needRequired")}</p>}
       {error && <Banner tone="bad">{error}</Banner>}
       <Button full size="lg" disabled={!requiredOk || busy} onClick={agree}>{t("kyc.consent.agree")}</Button>
     </div>

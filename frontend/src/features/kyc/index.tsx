@@ -44,7 +44,7 @@ export function KycPage() {
       <div>
         <PageTitle title={t("kyc.title")} />
         <Banner tone="warn">{t("kyc.noOrder")}</Banner>
-        <Link to="/advisor" className="mt-4 inline-block text-brand-700 underline">{t("kyc.toAdvisor")}</Link>
+        <Link to="/advisor" className="mt-4 inline-block underline underline-offset-4">{t("kyc.toAdvisor")}</Link>
       </div>
     );
   }

@@ -32,21 +32,21 @@ function clearChat() {
 function QuotePreview({ quote, onOpen }: { quote: Quote; onOpen: () => void }) {
   const { t, lt } = useT();
   return (
-    <Card className="border-brand-100">
+    <Card>
       <div className="flex items-baseline justify-between gap-2">
         <p className="font-semibold">{t("advisor.quoteTitle")}</p>
-        <span className="text-sm text-muted">{t("advisor.items", { n: quote.items.length })}</span>
+        <span className="text-sm text-muted-foreground">{t("advisor.items", { n: quote.items.length })}</span>
       </div>
-      <p className="mt-1 text-2xl font-bold"><Money amount={quote.monthly_total_inr} suffix={t("common.perMonth")} /></p>
-      <p className="text-sm text-muted">
+      <p className="mt-1 text-2xl font-semibold tracking-tight"><Money amount={quote.monthly_total_inr} suffix={t("common.perMonth")} /></p>
+      <p className="text-sm text-muted-foreground">
         {t("common.plusGst")}
         {quote.one_time_total_inr > 0 && <> · <Money amount={quote.one_time_total_inr} /> {t("common.oneTime")}</>}
       </p>
       <ul className="mt-3 space-y-1.5 text-sm">
         {quote.items.map((i) => (
           <li key={i.product_id}>
-            <span className="font-medium">{i.name}</span>{i.quantity > 1 && <span className="text-muted"> × {i.quantity}</span>}
-            <span className="block text-muted">{lt(i.reason)}</span>
+            <span className="font-medium">{i.name}</span>{i.quantity > 1 && <span className="text-muted-foreground"> × {i.quantity}</span>}
+            <span className="block text-muted-foreground">{lt(i.reason)}</span>
           </li>
         ))}
       </ul>
@@ -167,8 +167,9 @@ export function AdvisorPage() {
           {ttsSupported && (
             <button type="button" onClick={() => { setSpeaker((s) => !s); stopSpeaking(); }} aria-pressed={speaker}
               aria-label={speaker ? t("advisor.speakerOn") : t("advisor.speakerOff")} title={speaker ? t("advisor.speakerOn") : t("advisor.speakerOff")}
-              className={cx("flex h-9 w-9 items-center justify-center rounded-lg border text-lg", speaker ? "border-brand-600 bg-brand-50" : "border-line bg-white")}>
-              <span aria-hidden="true">{speaker ? "🔊" : "🔈"}</span>
+              className={cx("h-8 whitespace-nowrap rounded-md border px-2.5 text-sm transition-colors",
+                speaker ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:text-foreground")}>
+              {t("advisor.readAloud")}
             </button>
           )}
         </div>
@@ -177,16 +178,16 @@ export function AdvisorPage() {
       <div className="flex flex-col gap-2" role="log" aria-live="polite">
         {chat.bubbles.map((b, i) => (
           <div key={i} className={cx("flex", b.from === "user" ? "justify-end" : "justify-start")}>
-            <p className={cx("max-w-[85%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-[0.95rem] leading-snug",
-              b.from === "user" ? "rounded-br-md bg-brand-600 text-white" : "rounded-bl-md border border-line bg-white text-ink")}>
+            <p className={cx("max-w-[85%] whitespace-pre-line rounded-lg px-3.5 py-2.5 text-[0.95rem] leading-snug",
+              b.from === "user" ? "rounded-br-sm bg-foreground text-background" : "rounded-bl-sm border border-border bg-card text-foreground")}>
               <span className="sr-only">{b.from === "user" ? t("advisor.you") : t("advisor.bot")}: </span>{b.text}
             </p>
           </div>
         ))}
         {busy && (
           <div className="flex justify-start" role="status" aria-label={t("advisor.typing")}>
-            <span className="flex gap-1 rounded-2xl rounded-bl-md border border-line bg-white px-4 py-3.5">
-              {[0, 150, 300].map((d) => <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-muted" style={{ animationDelay: `${d}ms` }} />)}
+            <span className="flex gap-1 rounded-lg rounded-bl-md border border-border bg-card px-4 py-3.5">
+              {[0, 150, 300].map((d) => <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/60" style={{ animationDelay: `${d}ms` }} />)}
             </span>
           </div>
         )}
@@ -203,12 +204,13 @@ export function AdvisorPage() {
 
       {error && <Banner tone="bad">{error}</Banner>}
 
-      <form onSubmit={onSubmit} className="sticky bottom-2 flex items-center gap-2 rounded-2xl border border-line bg-white p-1.5 shadow-sm">
+      <form onSubmit={onSubmit} className="sticky bottom-2 flex items-center gap-2 rounded-lg border border-border bg-card p-1.5 shadow-sm">
         {speechSupported && (
           <button type="button" onClick={toggleMic} aria-pressed={listening} aria-label={listening ? t("advisor.micStop") : t("advisor.mic")}
-            className={cx("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg",
-              listening ? "animate-pulse bg-bad text-white" : "bg-brand-50 text-brand-700")}>
-            <span aria-hidden="true">🎤</span>
+            title={listening ? t("advisor.micStop") : t("advisor.mic")}
+            className={cx("h-8 shrink-0 rounded-md px-2.5 text-sm transition-colors",
+              listening ? "bg-destructive text-destructive-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground")}>
+            {listening ? t("advisor.micStopShort") : t("advisor.micShort")}
           </button>
         )}
         <input value={input} onChange={(e) => setInput(e.target.value)} disabled={busy} maxLength={2000}

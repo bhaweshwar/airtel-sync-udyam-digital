@@ -61,11 +61,11 @@ export function BackofficePage() {
         <PageTitle title={t("backoffice.title")} subtitle={t("backoffice.subtitle")} />
         <Button variant="ghost" size="sm" onClick={signOut}>{t("backoffice.signOut")}</Button>
       </div>
-      <div role="tablist" className="-mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-line px-4">
+      <div role="tablist" className="-mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-border px-4">
         {TABS.map((id) => (
           <button key={id} role="tab" type="button" aria-selected={tab === id} onClick={() => setTab(id)}
-            className={cx("whitespace-nowrap border-b-2 px-3 py-2 text-sm font-semibold",
-              tab === id ? "border-brand-600 text-brand-700" : "border-transparent text-muted hover:text-ink")}>
+            className={cx("whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium",
+              tab === id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
             {t(`backoffice.tab.${id}`)}
           </button>
         ))}
@@ -102,9 +102,9 @@ function Gate({ onKey }: { onKey: (k: string) => void }) {
       <PageTitle title={t("backoffice.title")} subtitle={t("backoffice.subtitle")} />
       <Card>
         <form onSubmit={submit} className="space-y-3">
-          <label className="block text-sm font-semibold" htmlFor="bo-key">{t("backoffice.gate.label")}</label>
+          <label className="block text-sm font-medium" htmlFor="bo-key">{t("backoffice.gate.label")}</label>
           <input id="bo-key" type="password" autoComplete="current-password" value={value} onChange={(e) => setValue(e.target.value)}
-            className="w-full rounded-xl border border-line px-3 py-2.5" />
+            className="w-full rounded-md border border-border px-3 py-2.5" />
           {error && <Banner tone="bad">{error}</Banner>}
           <Button type="submit" full disabled={busy || !value}>{t("backoffice.gate.submit")}</Button>
         </form>
@@ -119,7 +119,7 @@ function Status({ loading, error, empty, children }: { loading: boolean; error?:
   const { t } = useT();
   if (loading) return <Spinner label={t("common.loading")} />;
   if (error) return <Banner tone="bad">{error}</Banner>;
-  if (empty) return <Card><p className="text-muted">{t("backoffice.empty")}</p></Card>;
+  if (empty) return <Card><p className="text-muted-foreground">{t("backoffice.empty")}</p></Card>;
   return <>{children}</>;
 }
 
@@ -127,7 +127,7 @@ function FilterRow<T extends string>({ label, values, value, onChange, name }: {
   const { t } = useT();
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="w-20 text-sm font-semibold text-muted">{label}</span>
+      <span className="w-20 text-sm font-medium text-muted-foreground">{label}</span>
       <Chip selected={!value} onClick={() => onChange(undefined)}>{t("backoffice.all")}</Chip>
       {values.map((v) => <Chip key={v} selected={value === v} onClick={() => onChange(v)}>{name(v)}</Chip>)}
     </div>
@@ -152,7 +152,7 @@ function LeadsTab({ k, onAuthFail }: TabProps) {
           onChange={(v) => { setSegment(v); setOffset(0); }} name={(s) => t(`backoffice.segment.${s}`)} />
       </Card>
       <Status loading={loading} error={error} empty={!!data && data.items.length === 0}>
-        <p className="text-sm text-muted">{t("backoffice.leads.total", { n: total })}</p>
+        <p className="text-sm text-muted-foreground">{t("backoffice.leads.total", { n: total })}</p>
         <ul className="space-y-2">
           {data?.items.map((r) => (
             <li key={r.lead_id}>
@@ -161,13 +161,13 @@ function LeadsTab({ k, onAuthFail }: TabProps) {
                   <div className="flex flex-wrap items-center gap-2">
                     <Pill tone={bandTone[r.band]}>{t(`backoffice.band.${r.band}`)}</Pill>
                     <span className="font-semibold">{r.business_name}</span>
-                    <span className="text-sm text-muted">{r.lead_id} · {r.city} (T{r.city_tier}) · {t(`backoffice.segment.${r.segment}`)} · {r.preferred_language} · {r.source}</span>
+                    <span className="text-sm text-muted-foreground">{r.lead_id} · {r.city} (T{r.city_tier}) · {t(`backoffice.segment.${r.segment}`)} · {r.preferred_language} · {r.source}</span>
                   </div>
                   <p className="mt-1 text-sm"><span className="font-semibold">{t("backoffice.leads.why")}:</span> {r.top_factors.join(", ")}</p>
-                  <p className="text-sm text-muted">{t("backoffice.leads.dropped", { reason: r.drop_reason ?? "" })} · {t("backoffice.leads.stage", { stage: r.stage_reached })}</p>
+                  <p className="text-sm text-muted-foreground">{t("backoffice.leads.dropped", { reason: r.drop_reason ?? "" })} · {t("backoffice.leads.stage", { stage: r.stage_reached })}</p>
                 </div>
                 <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-                  <span className="text-lg font-bold tabular-nums" title={t("backoffice.leads.score")}>{Math.round(r.score * 100)}</span>
+                  <span className="text-lg font-semibold tabular-nums" title={t("backoffice.leads.score")}>{Math.round(r.score * 100)}</span>
                   <Pill tone="info">{t(`backoffice.channel.${r.suggested_channel}`)}</Pill>
                 </div>
               </Card>
@@ -176,7 +176,7 @@ function LeadsTab({ k, onAuthFail }: TabProps) {
         </ul>
         <div className="flex items-center justify-between">
           <Button variant="secondary" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE))}>{t("backoffice.leads.prev")}</Button>
-          <span className="text-sm text-muted">{t("backoffice.leads.range", { from: total ? offset + 1 : 0, to: Math.min(offset + PAGE, total), total })}</span>
+          <span className="text-sm text-muted-foreground">{t("backoffice.leads.range", { from: total ? offset + 1 : 0, to: Math.min(offset + PAGE, total), total })}</span>
           <Button variant="secondary" size="sm" disabled={offset + PAGE >= total} onClick={() => setOffset(offset + PAGE)}>{t("backoffice.leads.next")}</Button>
         </div>
       </Status>
@@ -204,7 +204,7 @@ function HandoffsTab({ k, onAuthFail }: TabProps) {
                 })}{h.profile.needs.length ? ` · ${h.profile.needs.join(", ")}` : ""}</p>
               )}
               {h.phone_masked && <p className="text-sm tabular">{t("backoffice.handoffs.phone", { phone: h.phone_masked })}</p>}
-              <p className="text-xs text-muted">{h.handoff_id} · {h.session_id} · {when(h.created_at)}</p>
+              <p className="text-xs text-muted-foreground">{h.handoff_id} · {h.session_id} · {when(h.created_at)}</p>
             </Card>
           </li>
         ))}
@@ -241,13 +241,13 @@ function KycTab({ k, onAuthFail }: TabProps) {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold">{r.order_id}</span>
                 <Pill tone={r.verdict === "MANUAL_REVIEW" ? "warn" : "info"}>{t(`backoffice.kyc.verdict.${r.verdict}`)}</Pill>
-                <span className="text-xs text-muted">{when(r.created_at)}</span>
+                <span className="text-xs text-muted-foreground">{when(r.created_at)}</span>
               </div>
               <ul className="mt-2 space-y-1">
                 {r.failing_checks.map((c) => (
                   <li key={c.code + (c.doc_type ?? "")} className="flex flex-wrap items-start gap-2 text-sm">
                     <Pill tone={c.status === "FAIL" ? "bad" : "warn"}>{c.status}</Pill>
-                    <span>{lt(c.message)}{c.fix_hint && <span className="text-muted"> — {lt(c.fix_hint)}</span>}</span>
+                    <span>{lt(c.message)}{c.fix_hint && <span className="text-muted-foreground"> — {lt(c.fix_hint)}</span>}</span>
                   </li>
                 ))}
               </ul>
@@ -301,7 +301,7 @@ function OrdersTab({ k, onAuthFail }: TabProps) {
                     <span className="font-semibold">{o.order_id}</span>
                     <Pill tone={o.status === "ACTIVE" ? "ok" : o.status === "REJECTED" ? "bad" : "info"}>{t(`backoffice.model.status.${o.status}`)}</Pill>
                   </div>
-                  <p className="text-sm text-muted">{o.contact_name} · {o.phone_masked} · {t("backoffice.orders.monthly", { amount: formatInr(o.monthly_total_inr) })} · {when(o.created_at)}</p>
+                  <p className="text-sm text-muted-foreground">{o.contact_name} · {o.phone_masked} · {t("backoffice.orders.monthly", { amount: formatInr(o.monthly_total_inr) })} · {when(o.created_at)}</p>
                 </div>
                 {demo_mode && (
                   <Button size="sm" variant="secondary" disabled={busy === o.order_id || o.status === "ACTIVE" || o.status === "REJECTED"}
@@ -329,20 +329,20 @@ function ModelTab({ k, onAuthFail }: TabProps) {
       <Status loading={model.loading} error={model.error}>
         {m && (
           <Card className="space-y-3">
-            <h2 className="text-lg font-bold">{t("backoffice.model.headline")}</h2>
+            <h2 className="text-lg font-semibold">{t("backoffice.model.headline")}</h2>
             <p>{t("backoffice.model.auc", { pct: Math.round(m.auc_time_split * 100), auc: m.auc_time_split.toFixed(2) })}</p>
             <p>{t("backoffice.model.lift", { lift: m.top_decile_lift.toFixed(1) })}</p>
             <p>{t("backoffice.model.capture", { pct: Math.round(m.top20_capture * 100) })}</p>
             <Banner tone="warn">{lt(m.caveat)}</Banner>
-            <p className="text-sm text-muted">{t("backoffice.model.rows", { train: m.train_rows, test: m.test_rows })}</p>
+            <p className="text-sm text-muted-foreground">{t("backoffice.model.rows", { train: m.train_rows, test: m.test_rows })}</p>
             <h3 className="pt-2 font-semibold">{t("backoffice.model.weights")}</h3>
-            <p className="text-xs text-muted">{t("backoffice.model.weightsHint")}</p>
+            <p className="text-xs text-muted-foreground">{t("backoffice.model.weightsHint")}</p>
             <ul className="space-y-1">
               {m.coefficients.map((c) => (
                 <li key={c.feature} className="grid grid-cols-[minmax(0,11rem)_1fr_3rem] items-center gap-2 text-sm">
                   <span className="truncate" title={c.feature}>{c.feature}</span>
-                  <span className="h-2 rounded-full bg-surface">
-                    <span className={cx("block h-2 rounded-full", c.weight >= 0 ? "bg-ok" : "bg-bad")} style={{ width: `${(Math.abs(c.weight) / maxW) * 100}%` }} />
+                  <span className="h-2 rounded-full bg-secondary">
+                    <span className={cx("block h-2 rounded-full", c.weight >= 0 ? "bg-foreground/70" : "bg-destructive/70")} style={{ width: `${(Math.abs(c.weight) / maxW) * 100}%` }} />
                   </span>
                   <span className="text-right tabular-nums">{c.weight > 0 ? "+" : ""}{c.weight.toFixed(2)}</span>
                 </li>
@@ -354,18 +354,18 @@ function ModelTab({ k, onAuthFail }: TabProps) {
       <Status loading={funnel.loading} error={funnel.error}>
         {funnel.data && (
           <Card className="space-y-3">
-            <h2 className="text-lg font-bold">{t("backoffice.model.funnel")}</h2>
+            <h2 className="text-lg font-semibold">{t("backoffice.model.funnel")}</h2>
             <ul className="space-y-1.5">
               {funnel.data.baseline.map((s) => (
                 <li key={s.stage} className="grid grid-cols-[8rem_1fr_3.5rem] items-center gap-2 text-sm">
                   <span>{s.stage}</span>
-                  <span className="h-3 rounded bg-surface"><span className="block h-3 rounded bg-brand-500" style={{ width: `${(s.count / top) * 100}%` }} /></span>
+                  <span className="h-3 rounded bg-secondary"><span className="block h-3 rounded bg-foreground/70" style={{ width: `${(s.count / top) * 100}%` }} /></span>
                   <span className="text-right tabular-nums">{s.count.toLocaleString("en-IN")}</span>
                 </li>
               ))}
             </ul>
             <h3 className="pt-2 font-semibold">{t("backoffice.model.live")}</h3>
-            {Object.keys(funnel.data.live).length === 0 ? <p className="text-sm text-muted">{t("backoffice.empty")}</p> : (
+            {Object.keys(funnel.data.live).length === 0 ? <p className="text-sm text-muted-foreground">{t("backoffice.empty")}</p> : (
               <div className="flex flex-wrap gap-2">
                 {Object.entries(funnel.data.live).map(([status, n]) => (
                   <Pill key={status} tone="info">{t(`backoffice.model.status.${status}`)}: {n}</Pill>

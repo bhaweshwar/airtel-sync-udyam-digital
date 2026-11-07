@@ -13,8 +13,8 @@ function NotFound() {
   const { t } = useT();
   return (
     <div className="py-10 text-center">
-      <p className="text-lg font-semibold">404</p>
-      <Link to="/" className="text-brand-700 underline">{t("common.back")}</Link>
+      <p className="text-lg font-medium">404</p>
+      <Link to="/" className="text-muted-foreground underline underline-offset-4 hover:text-foreground">{t("common.back")}</Link>
     </div>
   );
 }
