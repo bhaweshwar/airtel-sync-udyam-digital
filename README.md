@@ -12,8 +12,9 @@ Accel staff get a back office that ranks the leads the journey didn't close.
 
 ## Status
 
-All four required modules work end to end, plus the back office with a lead score, browser voice input in the advisor, and a Docker/Render deployment setup.
-- **Checks:** 61 backend tests; `scripts/kyc_eval.py` matches all 12 sample applicants; `scripts/advisor_scenarios.py` passes all 12 scenarios in rules mode.
+All four required modules work end to end, plus the back office with a lead score and browser voice input in the advisor.
+- **Live prototype:** https://udyam-digital-779328647112.asia-south1.run.app (Google Cloud Run; the back office needs the staff passcode).
+- **Checks:** 82 backend tests; `scripts/kyc_eval.py` matches all 12 sample applicants; `scripts/advisor_scenarios.py` passes all 12 scenarios in rules mode.
 - **Submission pack:** in `docs/deck/`, `docs/architecture/`, `docs/privacy/` and `docs/demo-script.md`.
 - **How it was built:** in six parallel workstreams; see [docs/WORKSTREAMS.md](docs/WORKSTREAMS.md).
 
@@ -33,18 +34,20 @@ scripts/dev.sh              # API on :8000, web on :5173
 - **Mock mode:** `npm --prefix frontend run mock` uses sample data and makes no server calls.
 - **Tests:** `cd backend && .venv/bin/python -m pytest`
 
-## Deploy (Render)
+## Deploy (Google Cloud Run)
 
-The `Dockerfile` builds the React app and serves it from FastAPI in one container. `render.yaml` describes the service.
+The `Dockerfile` builds the React app and serves it from FastAPI in one container. The live prototype runs on Cloud Run in `asia-south1` with 2 vCPU and 2 GB of memory (document reading needs about 1.2 GB at its peak), one instance at most.
 
-1. Push this repository to GitHub.
-2. In Render, choose **New > Blueprint** and pick the repository. Render reads `render.yaml`.
-3. In the service's **Environment** tab, add `GROQ_API_KEY` and/or `GEMINI_API_KEY`. Without them the advisor runs in offline rules mode.
-   - `BACKOFFICE_KEY` and `FERNET_KEY` are generated for you. The staff passcode is the `BACKOFFICE_KEY` value.
-4. Before a demo, open the URL once to wake it. The free plan sleeps when idle, and the first request takes about 30 s.
+1. Store `GROQ_API_KEY`, `GEMINI_API_KEY`, `BACKOFFICE_KEY` and `FERNET_KEY` in Secret Manager. Without LLM keys the advisor runs in offline rules mode. The staff passcode is the `BACKOFFICE_KEY` value.
+2. From a clean export of the repository (no `.env`), deploy with
+   `gcloud run deploy udyam-digital --source . --region asia-south1 --cpu 2 --memory 2Gi --max-instances 1 --set-secrets GROQ_API_KEY=GROQ_API_KEY:latest,...`
+   and set `OCR_THREADS=1` so the tracker stays responsive while a document is read.
+3. Before a demo, open the URL once. An idle service scales to zero, and the first request takes a few seconds.
 
-Limits of the free setup:
-- **Demo data resets.** The SQLite database lives on the container's disk, so orders disappear on every restart or redeploy.
+`render.yaml` is kept for reference, but Render's free 512 MB plan runs out of memory while reading documents.
+
+Limits of this setup:
+- **Demo data resets.** The SQLite database lives on the container's disk, so orders disappear on every restart, redeploy or scale to zero.
 - **Demo mode is on.** Sample applicants and the "move to next step" button are visible; set `DEMO_MODE=0` to hide them.
 
 ## Layout
