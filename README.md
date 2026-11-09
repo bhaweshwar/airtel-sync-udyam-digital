@@ -1,22 +1,43 @@
 # Udyam Digital
 
-A digital-first acquisition and onboarding journey for small businesses, built for the YTL Hackathon 2026, Enterprise Track A (Airtel SYNC): Project Udyam Digital. The case uses a fictional operator, Accel Telecom, and its B2B arm, Accel Business. All data is synthetic.
+**A digital-first acquisition and onboarding journey for small businesses.**
 
-A business owner, on a phone and in English or Hindi:
-1. **Advisor:** talks to an advisor that recommends a bundle from the catalogue and explains why.
-2. **Quote:** sees one monthly price and switches add-ons on or off.
-3. **Smart KYC:** completes KYC with document photos, mock GSTIN/Udyam lookups and a clear consent screen.
-4. **Tracker:** follows installation without calling support.
+Built for YTL Hackathon 2026, Enterprise Track A (Airtel SYNC). The case uses the fictional operator Accel Telecom and its B2B arm, Accel Business. All case and prototype data is synthetic.
 
-Accel staff get a back office that ranks the leads the journey didn't close.
+## The idea
 
-## Status
+Small businesses often piece together connectivity and digital services from multiple providers, while sales, quoting, KYC and installation can involve slow, manual steps. Udyam Digital brings discovery, a tailored bundle, transparent pricing, document checks and order tracking into one mobile-first journey.
 
-All four required modules work end to end, plus the back office with a lead score and browser voice input in the advisor.
-- **Live prototype:** https://udyam-digital-779328647112.asia-south1.run.app (Google Cloud Run; the back office needs the staff passcode).
-- **Checks:** 82 backend tests; `scripts/kyc_eval.py` matches all 12 sample applicants; `scripts/advisor_scenarios.py` passes all 12 scenarios in rules mode.
-- **Submission pack:** in `docs/deck/`, `docs/architecture/`, `docs/privacy/` and `docs/demo-script.md`.
-- **How it was built:** in six parallel workstreams; see [docs/WORKSTREAMS.md](docs/WORKSTREAMS.md).
+The synthetic case data shows the opportunity: 368 of 5,000 leads activated (7.4%), with an average 17.6 days to activation and about three status calls per customer.
+
+## The customer journey
+
+1. **Discover:** An English- or Hindi-speaking owner describes their business to an advisor by chat or voice.
+2. **Get a bundle:** A deterministic rules engine recommends eligible products and calculates a clear monthly price. Add-ons can be toggled.
+3. **Complete KYC:** The owner reviews purpose-specific consent, uploads documents, and receives checks using OCR and mock GSTIN/Udyam registries.
+4. **Track the order:** The owner uses an order ID and PIN to view status, installation slots and ETAs.
+
+Accel staff can use a passcode-protected back office to review handoffs, KYC cases and ranked leads.
+
+## What makes the design useful
+
+- **Rules set eligibility and prices.** The LLM helps interpret the owner’s message and phrase replies; it does not choose prices.
+- **The advisor has a fallback.** If LLM services are unavailable or not configured, a rules-based parser continues the conversation.
+- **The journey supports assisted sales.** Leads that do not close digitally can be routed to staff or partners.
+- **The prototype is multilingual and mobile-first.** The owner journey supports English and Hindi, with browser voice input in the advisor.
+
+## Prototype and project files
+
+- **Live prototype:** [Open Udyam Digital](https://udyam-digital-779328647112.asia-south1.run.app). The back office requires the configured staff passcode.
+- **Architecture:** [View the solution architecture diagram](Architecture%20Diagram.png).
+- **Privacy and security:** [Read the one-page design note](Privacy%20and%20Security%20Note.pdf).
+- **Checks:** 82 backend tests; the KYC evaluation matches all 12 sample applicants; the advisor scenarios pass all 12 cases in rules mode.
+
+## Privacy and security choices
+
+KYC actions require recorded consent. The application processes document uploads in memory and does not persist customer document photos. Phone numbers are encrypted at rest, and order PINs are stored as salted hashes. The advisor masks recognized GSTIN, Udyam and Indian mobile-number patterns before sending messages to configured LLM providers.
+
+This is a synthetic-data prototype, not a production security certification. Retention deletion jobs are not implemented; back-office access uses a shared passcode; and the demo SQLite database is not durable across service restarts or scale-to-zero. See the [privacy and security note](Privacy%20and%20Security%20Note.pdf) for details.
 
 ## Run it
 
@@ -50,22 +71,11 @@ Limits of this setup:
 - **Demo data resets.** The SQLite database lives on the container's disk, so orders disappear on every restart, redeploy or scale to zero.
 - **Demo mode is on.** Sample applicants and the "move to next step" button are visible; set `DEMO_MODE=0` to hide them.
 
-## Layout
+## Repository layout
 
-```
-data/         case CSVs + 47 specimen KYC images (synthetic)
-backend/      FastAPI app: contracts, data, store, common helpers, one router + package per module
-frontend/     Vite + React + TypeScript + Tailwind, mobile-first, EN/HI
-docs/         CONTRACTS.md (shared API), WORKSTREAMS.md (plan + prompts), case brief and template
-scripts/      dev.sh, setup_worktree.sh, export_fixtures.py
-```
-
-## Design rules
-
-- **Rules decide, the LLM talks.** Products, eligibility and prices come from a deterministic engine. The LLM only understands the owner's words and phrases replies, and never writes numbers.
-- **The advisor never dead-ends.** With no LLM key, or when the LLM fails, a rules parser keeps the conversation going in English, Hindi and Hinglish.
-- **Privacy by default:**
-  - Consent is asked per purpose before KYC.
-  - Document photos are read in memory and never stored.
-  - Identifiers are masked in responses and logs.
-  - Phone numbers are encrypted at rest.
+- `backend/` — FastAPI app, API routers, rules engine, advisor, KYC pipeline, orders and lead scoring.
+- `frontend/` — Vite, React, TypeScript and Tailwind app; mobile-first, English and Hindi.
+- `data/` — synthetic case CSVs and specimen KYC images.
+- `scripts/` — development, evaluation and fixture tools.
+- `Architecture Diagram.png` — solution architecture.
+- `Privacy and Security Note.pdf` — one-page privacy and security design note.
